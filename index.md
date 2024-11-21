@@ -5,7 +5,7 @@ hero:
   text: 让旅行更简单
   tagline: 专业的环球旅行规划指南，助你实现旅行梦想
   image:
-    src: /images/hero.png
+    src: https://cloudflare-imgbed-1d8.pages.dev/file/1732189556282_6decfd8553d5a64618bc890240151665.jpg
     alt: 环球旅行
   actions:
     - theme: brand
