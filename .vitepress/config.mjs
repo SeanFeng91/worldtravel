@@ -89,12 +89,6 @@ export default defineConfig({
       copyright: 'Copyright © 2024-present WorldTravel'
     },
     
-    algolia: {
-      appId: '你的APPID',
-      apiKey: '你的API_KEY',
-      indexName: 'worldtravel'
-    },
-    
     search: {
       provider: 'algolia',
       options: {
