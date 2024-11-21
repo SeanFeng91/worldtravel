@@ -5,16 +5,15 @@
   "maxDepth": 10,
   "selectors": {
     "lvl0": {
-      "selector": ".sidebar-heading.active",
+      "selector": ".VPNavBarTitle",
       "global": true,
       "default_value": "Documentation"
     },
-    "lvl1": ".content h1",
-    "lvl2": ".content h2",
-    "lvl3": ".content h3",
-    "lvl4": ".content h4",
-    "lvl5": ".content h5",
-    "text": ".content p, .content li",
+    "lvl1": ".VPContent h1",
+    "lvl2": ".VPContent h2",
+    "lvl3": ".VPContent h3",
+    "lvl4": ".VPContent h4",
+    "text": ".VPContent p, .VPContent li",
     "lang": {
       "selector": "/html/@lang",
       "type": "xpath",
@@ -23,6 +22,17 @@
   },
   "strip_chars": " .,;:#",
   "custom_settings": {
-    "attributesForFaceting": ["lang", "tags"]
-  }
+    "attributesForFaceting": ["lang", "tags"],
+    "attributesToRetrieve": [
+      "hierarchy",
+      "content",
+      "anchor",
+      "url",
+      "url_without_anchor"
+    ]
+  },
+  "conversation_id": ["url"],
+  "nb_hits": 10000,
+  "js_render": true,
+  "js_wait": 1
 } 
