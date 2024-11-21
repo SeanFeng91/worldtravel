@@ -1,20 +1,13 @@
 # 行程规划工具 📅
 
-## 行程规划助手
+## 功能介绍
+::: tip 主要功能
+- 行程设计
+- 时间安排
+- 路线优化
+:::
 
-<div class="planner">
-  <div class="timeline-creator">
-    <h3>创建行程时间线</h3>
-    <!-- 时间线创建工具 -->
-  </div>
-  
-  <div class="destination-manager">
-    <h3>目的地管理</h3>
-    <!-- 目的地添加和管理界面 -->
-  </div>
-  
-  <div class="transport-planner">
-    <h3>交通规划</h3>
-    <!-- 交通方式选择和规划工具 -->
-  </div>
-</div> 
+## 使用方法
+1. 添加目的地
+2. 设置时间
+3. 生成行程 
