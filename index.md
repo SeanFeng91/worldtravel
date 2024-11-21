@@ -1,25 +1,50 @@
 ---
-# https://vitepress.dev/reference/default-theme-home-page
 layout: home
-
 hero:
-  name: "Project about how to travel around the world!"
-  text: "My WorldTravel Blog"
-  tagline: My great project tagline
+  name: 环球旅行规划
+  text: 让旅行更简单
+  tagline: 专业的环球旅行规划指南，助你实现旅行梦想
+  image:
+    src: /images/hero.png
+    alt: 环球旅行
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: 开始规划
+      link: /guide/getting-started
     - theme: alt
-      text: API Examples
-      link: /api-examples
-
+      text: 查看工具
+      link: /tools/
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - icon: 🗺️
+    title: 专业规划
+    details: 提供详尽的路线规划、预算管理和签证指南
+    link: /guide/route
+  - icon: 💡
+    title: 实用工具
+    details: 旅行预算计算器、行程规划工具等实用工具
+    link: /tools/
+  - icon: 👥
+    title: 社区交流
+    details: 与其他旅行者分享经验，寻找旅伴
+    link: /community/
+  - icon: 📸
+    title: 旅行摄影
+    details: 专业的旅行摄影技巧和器材建议
+    link: /special/photography
+  - icon: 🍜
+    title: 美食地图
+    details: 世界各地特色美食推荐和寻味指南
+    link: /special/food
+  - icon: 📝
+    title: 经验分享
+    details: 来自资深旅行者的第一手经验
+    link: /special/experience
 ---
+
+<style>
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #3eaf7c 30%, #42d392);
+}
+</style>
 
