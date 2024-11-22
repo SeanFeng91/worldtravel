@@ -16,12 +16,13 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '开始规划',
+          text: '网页介绍',
           items: [
-            { text: '入门指南', link: '/guide/getting-started' },
-            { text: '路线设计', link: '/guide/route' },
-            { text: '预算规划', link: '/guide/budget' },
-            { text: '签证指南', link: '/guide/visa' },
+            { text: '背景情况', link: '/guide/getting-started' },
+            { text: '撰写指南', link: '/guide/how-to-write' },
+            { text: '完成情况', link: '/guide/progress-status' },
+            { text: '未来计划', link: '/guide/future-plan' },
+            { text: '存在困难', link: '/guide/problems' },
           ]
         },
         {

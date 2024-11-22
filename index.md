@@ -9,7 +9,7 @@ hero:
     alt: 环球旅行
   actions:
     - theme: brand
-      text: 开始规划
+      text: 基本指南
       link: /guide/getting-started
     - theme: alt
       text: 查看工具

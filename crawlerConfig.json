@@ -1,38 +1,97 @@
 {
-  "index_name": "worldtravel",
-  "start_urls": ["https://worldtravel-83q.pages.dev"],
+  "appId": "52C6J0MS4V",
+  "apiKey": "816dc34de3e9c7f6b2d4f95bb85ba4a5",
   "rateLimit": 8,
-  "maxDepth": 10,
-  "selectors": {
-    "lvl0": {
-      "selector": ".VPNavBarTitle",
-      "global": true,
-      "default_value": "Documentation"
-    },
-    "lvl1": ".VPContent h1",
-    "lvl2": ".VPContent h2",
-    "lvl3": ".VPContent h3",
-    "lvl4": ".VPContent h4",
-    "text": ".VPContent p, .VPContent li",
-    "lang": {
-      "selector": "/html/@lang",
-      "type": "xpath",
-      "global": true
+  "startUrls": ["https://worldtravel-83q.pages.dev/"],
+  "renderJavaScript": false,
+  "sitemaps": [],
+  "exclusionPatterns": [],
+  "ignoreCanonicalTo": false,
+  "discoveryPatterns": ["https://worldtravel-83q.pages.dev/**"],
+  "schedule": "at 05:10 on Saturday",
+  "actions": [
+    {
+      "indexName": "worldtravel",
+      "pathsToMatch": ["https://worldtravel-83q.pages.dev/**"],
+      "recordExtractor": {
+        "type": "selectorContent",
+        "selectors": [
+          "title",
+          ".content h1",
+          ".content h2",
+          ".content h3",
+          ".content h4",
+          ".content h5",
+          ".content p",
+          ".content li"
+        ]
+      }
     }
-  },
-  "strip_chars": " .,;:#",
-  "custom_settings": {
-    "attributesForFaceting": ["lang", "tags"],
-    "attributesToRetrieve": [
-      "hierarchy",
-      "content",
-      "anchor",
-      "url",
-      "url_without_anchor"
-    ]
-  },
-  "conversation_id": ["url"],
-  "nb_hits": 10000,
-  "js_render": true,
-  "js_wait": 1
-} 
+  ],
+  "initialIndexSettings": {
+    "worldtravel": {
+      "attributesForFaceting": ["type", "lang"],
+      "attributesToRetrieve": ["hierarchy", "content", "anchor", "url"],
+      "attributesToHighlight": ["hierarchy", "hierarchy_camel", "content"],
+      "attributesToSnippet": ["content:10"],
+      "camelCaseAttributes": ["hierarchy", "hierarchy_radio", "content"],
+      "searchableAttributes": [
+        "unordered(hierarchy_radio_camel.lvl0)",
+        "unordered(hierarchy_radio.lvl0)",
+        "unordered(hierarchy_radio_camel.lvl1)",
+        "unordered(hierarchy_radio.lvl1)",
+        "unordered(hierarchy_radio_camel.lvl2)",
+        "unordered(hierarchy_radio.lvl2)",
+        "unordered(hierarchy_radio_camel.lvl3)",
+        "unordered(hierarchy_radio.lvl3)",
+        "unordered(hierarchy_radio_camel.lvl4)",
+        "unordered(hierarchy_radio.lvl4)",
+        "unordered(hierarchy_radio_camel.lvl5)",
+        "unordered(hierarchy_radio.lvl5)",
+        "unordered(hierarchy_radio_camel.lvl6)",
+        "unordered(hierarchy_radio.lvl6)",
+        "unordered(hierarchy_camel.lvl0)",
+        "unordered(hierarchy.lvl0)",
+        "unordered(hierarchy_camel.lvl1)",
+        "unordered(hierarchy.lvl1)",
+        "unordered(hierarchy_camel.lvl2)",
+        "unordered(hierarchy.lvl2)",
+        "unordered(hierarchy_camel.lvl3)",
+        "unordered(hierarchy.lvl3)",
+        "unordered(hierarchy_camel.lvl4)",
+        "unordered(hierarchy.lvl4)",
+        "unordered(hierarchy_camel.lvl5)",
+        "unordered(hierarchy.lvl5)",
+        "unordered(hierarchy_camel.lvl6)",
+        "unordered(hierarchy.lvl6)",
+        "content"
+      ],
+      "distinct": true,
+      "attributeForDistinct": "url",
+      "customRanking": [
+        "desc(weight.pageRank)",
+        "desc(weight.level)",
+        "asc(weight.position)"
+      ],
+      "ranking": [
+        "words",
+        "filters",
+        "typo",
+        "attribute",
+        "proximity",
+        "exact",
+        "custom"
+      ],
+      "highlightPreTag": "<span class=\"algolia-docsearch-suggestion--highlight\">",
+      "highlightPostTag": "</span>",
+      "minWordSizefor1Typo": 3,
+      "minWordSizefor2Typos": 7,
+      "allowTyposOnNumericTokens": false,
+      "minProximity": 1,
+      "ignorePlurals": true,
+      "advancedSyntax": true,
+      "attributeCriteriaComputedByMinProximity": true,
+      "removeWordsIfNoResults": "allOptional"
+    }
+  }
+}
