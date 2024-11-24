@@ -12,10 +12,11 @@
     "docs:preview": "vitepress preview ."
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "vue": "^3.3.0"
   },
   "devDependencies": {
-    "vitepress": "^1.0.0-rc.40",
-    "@vitejs/plugin-vue": "^5.0.0"
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vitepress": "^1.0.0-rc.40"
   }
 }

@@ -1,10 +1,11 @@
 import DefaultTheme from 'vitepress/theme'
-import './style.css'
-import './custom.css'
+import TravelMap from '../../components/TravelMap.vue'
+import PresetRouteMap from '../../components/PresetRouteMap.vue'
 
 export default {
   ...DefaultTheme,
   enhanceApp({ app }) {
-    // 在这里注册自定义组件
+    app.component('TravelMap', TravelMap)
+    app.component('PresetRouteMap', PresetRouteMap)
   }
 } 
