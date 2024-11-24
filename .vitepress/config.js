@@ -14,12 +14,14 @@ export default {
     build: {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
+        external: [],
         output: {
-          manualChunks: {
-            leaflet: ['leaflet']
-          }
+          inlineDynamicImports: true
         }
       }
+    },
+    ssr: {
+      noExternal: ['leaflet']
     }
   }
 } 
