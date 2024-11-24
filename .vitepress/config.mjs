@@ -30,7 +30,7 @@ export default defineConfig({
           items: [
             { text: '交通攻略', link: '/guide/transport' },
             { text: '住宿建议', link: '/guide/accommodation' },
-            { text: '时间管理', link: '/guide/time' },
+            { text: '间管理', link: '/guide/time' },
             { text: '行前准备', link: '/guide/preparation' },
           ]
         }
@@ -146,5 +146,46 @@ export default defineConfig({
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
     ['meta', { name: 'docsearch:language', content: 'zh-CN' }],
     ['meta', { name: 'docsearch:version', content: '1.0.0' }]
-  ]
+  ],
+  
+  vue: {
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => tag.includes('leaflet-')
+      }
+    }
+  },
+  
+  vite: {
+    optimizeDeps: {
+      include: ['leaflet']
+    },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        external: [],
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/leaflet')) {
+              return 'leaflet'
+            }
+          }
+        }
+      }
+    },
+    ssr: {
+      noExternal: ['leaflet']
+    },
+    plugins: [
+      {
+        name: 'markdown-transform',
+        enforce: 'pre',
+        transform(code, id) {
+          if (id.endsWith('.md')) {
+            return code
+          }
+        }
+      }
+    ]
+  }
 })
