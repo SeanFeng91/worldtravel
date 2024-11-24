@@ -16,9 +16,10 @@ export default {
       rollupOptions: {
         external: [],
         output: {
-          manualChunks: {
-            leaflet: ['leaflet'],
-            vendor: ['vue']
+          manualChunks(id) {
+            if (id.includes('node_modules/leaflet')) {
+              return 'leaflet'
+            }
           }
         }
       }
