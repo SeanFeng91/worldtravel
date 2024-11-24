@@ -16,7 +16,10 @@ export default {
       rollupOptions: {
         external: [],
         output: {
-          inlineDynamicImports: true
+          manualChunks: {
+            leaflet: ['leaflet'],
+            vendor: ['vue']
+          }
         }
       }
     },
