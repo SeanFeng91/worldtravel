@@ -19,7 +19,7 @@ export default defineConfig({
           text: '网页介绍',
           items: [
             { text: '背景情况', link: '/guide/getting-started' },
-            { text: '撰写指南', link: '/guide/how-to-write' },
+            { text: 'AI 聊天助手', link: '/guide/how-to-write' },
             { text: '完成情况', link: '/guide/progress-status' },
             { text: '未来计划', link: '/guide/future-plan' },
             { text: '存在困难', link: '/guide/problems' },

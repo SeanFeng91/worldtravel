@@ -1,12 +1,19 @@
-# 如何撰写 🗺️
+---
+title: AI 聊天助手
+---
 
-这是我规划的路线，从杭州出发，经过北京，西安，最终到达亚美尼亚...
+<script setup>
+import ChatDialog from '../components/ChatDialog.vue'
+</script>
 
-<ClientOnly>
-  <PresetRouteMap :routes="[
-    { type: 'start', name: '杭州市, 浙江省, 中国' },
-    { type: 'waypoint', name: '北京市, 中国' },
-    { type: 'waypoint', name: '西安市, 陕西省, 中国' },
-    { type: 'end', name: 'Yerevan, 亚美尼亚' }
-  ]" />
-</ClientOnly>
+# AI 聊天助手
+
+使用 AI 聊天助手，您可以进行智能对话。
+
+<ChatDialog />
+
+<style>
+:root {
+  --vp-layout-max-width: 1000px;
+}
+</style>

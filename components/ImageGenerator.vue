@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const imageUrl = ref('')
 const prompt = ref('')
@@ -40,7 +40,20 @@ const error = ref('')
 const API_KEY = import.meta.env.VITE_API_KEY
 const WORKER_URL = import.meta.env.VITE_WORKER_URL
 
+onMounted(() => {
+  console.log('环境变量检查：', {
+    'WORKER_URL': import.meta.env.VITE_WORKER_URL,
+    'API_KEY 存在': !!import.meta.env.VITE_API_KEY
+  })
+})
+
 const generateImage = async () => {
+  if (!WORKER_URL) {
+    error.value = 'Worker URL 未设置'
+    console.error('WORKER_URL 未定义，请检查环境变量')
+    return
+  }
+
   if (!prompt.value.trim()) {
     error.value = '请输入提示词'
     return
@@ -51,10 +64,8 @@ const generateImage = async () => {
   
   try {
     const encodedPrompt = encodeURIComponent(prompt.value.trim())
-    const url = `${WORKER_URL}?prompt=${encodedPrompt}`
-    
+    const url = `${WORKER_URL}/ai/image?prompt=${encodedPrompt}`
     console.log('请求 URL:', url)
-    console.log('API Key:', API_KEY)
 
     const response = await fetch(url, {
       headers: {
@@ -64,7 +75,7 @@ const generateImage = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.error || '请求失败')
+      throw new Error(errorData.error || '生成图片失败')
     }
 
     const blob = await response.blob()
@@ -74,8 +85,8 @@ const generateImage = async () => {
     }
     imageUrl.value = URL.createObjectURL(blob)
   } catch (err) {
-    console.error('完整错误信息:', err)
     error.value = err.message || '生成图片时发生错误'
+    console.error('Error generating image:', err)
     loading.value = false
   }
 }
