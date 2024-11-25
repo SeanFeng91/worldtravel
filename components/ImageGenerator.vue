@@ -37,7 +37,8 @@ const imageUrl = ref('')
 const prompt = ref('')
 const loading = ref(false)
 const error = ref('')
-const WORKER_URL = 'https://cloudflare-ai.fengyx91.workers.dev/' // 替换为您的 Worker URL
+const API_KEY = import.meta.env.VITE_API_KEY
+const WORKER_URL = import.meta.env.VITE_WORKER_URL
 
 const generateImage = async () => {
   if (!prompt.value.trim()) {
@@ -53,7 +54,11 @@ const generateImage = async () => {
     const url = `${WORKER_URL}?prompt=${encodedPrompt}`
     console.log('请求 URL:', url)
 
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': API_KEY,
+      }
+    })
 
     if (!response.ok) {
       const errorData = await response.json()
