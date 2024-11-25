@@ -20,6 +20,13 @@ export default {
 		'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
 	  };
   
+	  // 添加调试日志
+	  console.log('收到请求:', {
+		method: request.method,
+		path: path,
+		headers: Object.fromEntries(request.headers)
+	  });
+  
 	  // 处理 CORS 预检请求
 	  if (request.method === 'OPTIONS') {
 		return new Response(null, {
@@ -40,11 +47,19 @@ export default {
 	  }
   
 	  try {
-		// 处理聊天请求
-		if (path === '/ai/chat' && request.method === 'POST') {
-		  const { messages } = await request.json();
-		  console.log('收到的消息:', messages); // 调试日志
+		// 聊天功能
+		if (path === '/ai/chat') {
+		  if (request.method !== 'POST') {
+			return new Response(JSON.stringify({ error: '聊天功能只支持 POST 请求' }), {
+			  status: 405,
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			});
+		  }
   
+		  const { messages } = await request.json();
 		  const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
 			messages,
 			stream: true,
@@ -57,8 +72,18 @@ export default {
 			},
 		  });
 		} 
-		// 处理图片生成请求
-		else if (path === '/ai/image' && request.method === 'GET') {
+		// 图片生成功能
+		else if (path === '/ai/image') {
+		  if (request.method !== 'GET') {
+			return new Response(JSON.stringify({ error: '图片生成只支持 GET 请求' }), {
+			  status: 405,
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			});
+		  }
+  
 		  const userPrompt = url.searchParams.get('prompt');
 		  const prompt = userPrompt ? decodeURIComponent(userPrompt) : 'spaceship';
 		  
@@ -74,35 +99,28 @@ export default {
 			},
 		  });
 		} 
-		// 处理未知路径或方法
+		// 未知路径
 		else {
-		  return new Response(
-			JSON.stringify({ 
-			  error: '无效的请求方法或路径',
-			  path: path,
-			  method: request.method
-			}), 
-			{
-			  status: 405,
-			  headers: {
-				...corsHeaders,
-				'Content-Type': 'application/json'
-			  }
-			}
-		  );
-		}
-	  } catch (error) {
-		console.error('处理请求时出错:', error);
-		return new Response(
-		  JSON.stringify({ error: error.message }), 
-		  {
-			status: 500,
+		  return new Response(JSON.stringify({ error: '未找到该路径', path }), {
+			status: 404,
 			headers: {
 			  ...corsHeaders,
 			  'Content-Type': 'application/json'
 			}
+		  });
+		}
+	  } catch (error) {
+		console.error('处理请求时出错:', error);
+		return new Response(JSON.stringify({ 
+		  error: error.message,
+		  details: error.stack
+		}), {
+		  status: 500,
+		  headers: {
+			...corsHeaders,
+			'Content-Type': 'application/json'
 		  }
-		);
+		});
 	  }
 	}
   };

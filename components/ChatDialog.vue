@@ -37,7 +37,7 @@ const sendMessage = async () => {
   
   try {
     // 添加调试日志
-    console.log('发送请求到:', `${WORKER_URL}/ai/chat`);
+    console.log('发送请求到:', `${WORKER_URL}ai/chat`);
     console.log('发送的消息:', {
       messages: [
         { role: 'system', content: 'You are a friendly assistant' },
