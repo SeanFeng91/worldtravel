@@ -36,29 +36,35 @@ const sendMessage = async () => {
   isLoading.value = true
   
   try {
-    // 添加用户消息
-    messages.value.push({
-      role: 'user',
-      content: userInput.value
-    })
+    // 添加调试日志
+    console.log('发送请求到:', `${WORKER_URL}/ai/chat`);
+    console.log('发送的消息:', {
+      messages: [
+        { role: 'system', content: 'You are a friendly assistant' },
+        ...messages.value,
+        { role: 'user', content: userInput.value }
+      ]
+    });
 
-    // 准备发送的消息历史
-    const chatMessages = [
-      { role: 'system', content: 'You are a friendly assistant' },
-      ...messages.value
-    ]
-
-    // 发送请求
     const response = await fetch(`${WORKER_URL}/ai/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY
       },
-      body: JSON.stringify({ messages: chatMessages })
-    })
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: 'You are a friendly assistant' },
+          ...messages.value,
+          { role: 'user', content: userInput.value }
+        ]
+      })
+    });
 
-    if (!response.ok) throw new Error('请求失败')
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '请求失败');
+    }
 
     // 处理流式响应
     const reader = response.body.getReader()
@@ -83,7 +89,7 @@ const sendMessage = async () => {
 
     userInput.value = ''
   } catch (error) {
-    console.error('聊天错误:', error)
+    console.error('完整错误信息:', error);
     messages.value.push({
       role: 'system',
       content: '发生错误: ' + error.message

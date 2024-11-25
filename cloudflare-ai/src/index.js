@@ -10,7 +10,6 @@
 
 export default {
 	async fetch(request, env) {
-	  // 获取请求路径
 	  const url = new URL(request.url);
 	  const path = url.pathname;
   
@@ -19,7 +18,6 @@ export default {
 		'Access-Control-Allow-Origin': '*',
 		'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 		'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
-		'Access-Control-Max-Age': '86400',
 	  };
   
 	  // 处理 CORS 预检请求
@@ -41,11 +39,12 @@ export default {
 		});
 	  }
   
-	  // 根据路径处理不同请求
 	  try {
-		if (path === '/ai/chat') {
-		  // 处理聊天请求
+		// 处理聊天请求
+		if (path === '/ai/chat' && request.method === 'POST') {
 		  const { messages } = await request.json();
+		  console.log('收到的消息:', messages); // 调试日志
+  
 		  const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
 			messages,
 			stream: true,
@@ -57,36 +56,51 @@ export default {
 			  'Content-Type': 'text/event-stream',
 			},
 		  });
-		} else {
-		  // 处理图片生成请求（原有功能）
+		} 
+		// 处理图片生成请求
+		else if (path === '/ai/image' && request.method === 'GET') {
 		  const userPrompt = url.searchParams.get('prompt');
 		  const prompt = userPrompt ? decodeURIComponent(userPrompt) : 'spaceship';
 		  
-		  console.log('使用的 prompt:', prompt);
-  
 		  const response = await env.AI.run(
 			'@cf/stabilityai/stable-diffusion-xl-base-1.0',
-			{ prompt: prompt }
+			{ prompt }
 		  );
 	  
-		  // 返回生成的图片，添加 CORS 头
 		  return new Response(response, {
 			headers: {
 			  ...corsHeaders,
 			  'Content-Type': 'image/png',
 			},
 		  });
+		} 
+		// 处理未知路径或方法
+		else {
+		  return new Response(
+			JSON.stringify({ 
+			  error: '无效的请求方法或路径',
+			  path: path,
+			  method: request.method
+			}), 
+			{
+			  status: 405,
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			}
+		  );
 		}
 	  } catch (error) {
 		console.error('处理请求时出错:', error);
 		return new Response(
-		  JSON.stringify({ error: error.message }),
+		  JSON.stringify({ error: error.message }), 
 		  {
 			status: 500,
 			headers: {
 			  ...corsHeaders,
-			  'Content-Type': 'application/json',
-			},
+			  'Content-Type': 'application/json'
+			}
 		  }
 		);
 	  }
