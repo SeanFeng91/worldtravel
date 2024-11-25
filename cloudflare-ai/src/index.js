@@ -22,13 +22,13 @@ export default {
 	  console.log('收到请求:', request.method);
 	  console.log('请求头:', Object.fromEntries(request.headers));
   
-	  // 处理 CORS 预检请求，允许跨域访问
+	  // 处理 CORS 预检请求
 	  if (request.method === 'OPTIONS') {
 		return new Response(null, {
 		  headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'POST, OPTIONS',
-			'Access-Control-Allow-Headers': 'Content-Type',
+			'Access-Control-Allow-Methods': 'GET, OPTIONS',
+			'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
 			'Access-Control-Max-Age': '86400',
 		  },
 		});
