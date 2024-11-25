@@ -37,7 +37,7 @@ const imageUrl = ref('')
 const prompt = ref('')
 const loading = ref(false)
 const error = ref('')
-const WORKER_URL = 'https://your-worker.xxx.workers.dev' // 替换为您的 Worker URL
+const WORKER_URL = 'https://cloudflare-ai.fengyx91.workers.dev/' // 替换为您的 Worker URL
 
 const generateImage = async () => {
   if (!prompt.value.trim()) {
