@@ -49,9 +49,11 @@ const generateImage = async () => {
   error.value = ''
   
   try {
-    // 使用 GET 请求方式
     const encodedPrompt = encodeURIComponent(prompt.value.trim())
-    const response = await fetch(`${WORKER_URL}?prompt=${encodedPrompt}`)
+    const url = `${WORKER_URL}?prompt=${encodedPrompt}`
+    console.log('请求 URL:', url)
+
+    const response = await fetch(url)
 
     if (!response.ok) {
       const errorData = await response.json()

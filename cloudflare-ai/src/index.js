@@ -29,9 +29,18 @@ export default {
 	  // 修改这部分，同时支持 GET 和 POST
 	  if (request.method === 'GET') {
 		try {
+		  // 从 URL 获取 prompt 参数
+		  const url = new URL(request.url);
+		  const userPrompt = url.searchParams.get('prompt');
+		  
+		  // 如果没有提供 prompt，使用默认值
+		  const prompt = userPrompt ? decodeURIComponent(userPrompt) : 'spaceship';
+		  
+		  console.log('使用的 prompt:', prompt); // 添加日志便于调试
+
 		  const response = await env.AI.run(
 			'@cf/stabilityai/stable-diffusion-xl-base-1.0',
-			{ prompt: 'cyberpunk cat' }  // GET 请求使用默认 prompt
+			{ prompt: prompt }
 		  );
 	  
 		  return new Response(response, {
