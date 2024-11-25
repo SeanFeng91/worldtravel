@@ -44,7 +44,7 @@ const generateImage = async () => {
   if (!prompt.value.trim()) {
     error.value = '请输入提示词'
     return
-  }
+  } 
 
   loading.value = true
   error.value = ''
