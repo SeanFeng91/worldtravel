@@ -8,81 +8,100 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-// export default {
-// 	async fetch(request, env, ctx) {
-// 		return new Response('Hello World!');
-// 	},
-// };
-
 export default {
 	async fetch(request, env) {
-		// 处理 CORS 预检请求
-		if (request.method === 'OPTIONS') {
-			return new Response(null, {
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type',
-				},
-			});
-		}
-
-		try {
-			// 确保请求方法是 POST
-			if (request.method !== 'POST') {
-				throw new Error('只支持 POST 请求');
-			}
-
-			// 检查请求体是否为空
-			const text = await request.text();
-			if (!text) {
-				throw new Error('请求体不能为空');
-			}
-
-			// 尝试解析 JSON
-			let data;
-			try {
-				data = JSON.parse(text);
-			} catch (e) {
-				throw new Error('无效的 JSON 格式: ' + e.message);
-			}
-
-			// 验证 prompt 参数
-			if (!data.prompt) {
-				throw new Error('缺少 prompt 参数');
-			}
-
-			const inputs = {
-				prompt: data.prompt,
-			};
-
-			const response = await env.AI.run(
-				'@cf/stabilityai/stable-diffusion-xl-base-1.0',
-				inputs,
-			);
-
-			return new Response(response, {
-				headers: {
-					'content-type': 'image/png',
-					'Access-Control-Allow-Origin': '*',
-				},
-			});
-		} catch (error) {
-			console.error('Error:', error);
-			return new Response(
-				JSON.stringify({ 
-					error: error.message,
-					stack: error.stack // 开发时可以添加，生产环境建议移除
-				}), 
-				{
-					status: 500,
-					headers: {
-						'Content-Type': 'application/json',
-						'Access-Control-Allow-Origin': '*',
-					},
-				}
-			);
-		}
-	},
-};
+	  // 添加调试日志
+	  console.log('收到请求:', request.method);
+	  console.log('请求头:', Object.fromEntries(request.headers));
   
+	  // 处理 CORS 预检请求
+	  if (request.method === 'OPTIONS') {
+		return new Response(null, {
+		  headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'POST, OPTIONS',
+			'Access-Control-Allow-Headers': 'Content-Type',
+			'Access-Control-Max-Age': '86400',
+		  },
+		});
+	  }
+  
+	  // 修改这部分，同时支持 GET 和 POST
+	  if (request.method === 'GET') {
+		try {
+		  const response = await env.AI.run(
+			'@cf/stabilityai/stable-diffusion-xl-base-1.0',
+			{ prompt: 'cyberpunk cat' }  // GET 请求使用默认 prompt
+		  );
+	  
+		  return new Response(response, {
+			headers: {
+			  'Content-Type': 'image/png',
+			  'Access-Control-Allow-Origin': '*',
+			},
+		  });
+		} catch (error) {
+		  console.error('处理请求时出错:', error);
+		  return new Response(
+			JSON.stringify({ error: error.message }),
+			{
+			  status: 500,
+			  headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*',
+			  },
+			}
+		  );
+		}
+	  }
+  
+	  // POST 请求处理保持不变
+	  if (request.method !== 'POST') {
+		return new Response(
+		  JSON.stringify({
+			error: '只支持 POST 请求',
+			method: request.method,
+		  }),
+		  {
+			status: 405,
+			headers: {
+			  'Content-Type': 'application/json',
+			  'Access-Control-Allow-Origin': '*',
+			},
+		  }
+		);
+	  }
+  
+	  try {
+		const data = await request.json();
+		console.log('收到的数据:', data);
+  
+		const response = await env.AI.run(
+		  '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+		  { prompt: data.prompt }
+		);
+  
+		return new Response(response, {
+		  headers: {
+			'Content-Type': 'image/png',
+			'Access-Control-Allow-Origin': '*',
+		  },
+		});
+	  } catch (error) {
+		console.error('处理请求时出错:', error);
+		return new Response(
+		  JSON.stringify({
+			error: error.message,
+			stack: error.stack,
+		  }),
+		  {
+			status: 500,
+			headers: {
+			  'Content-Type': 'application/json',
+			  'Access-Control-Allow-Origin': '*',
+			},
+		  }
+		);
+	  }
+	}
+  };
