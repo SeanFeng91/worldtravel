@@ -1,6 +1,5 @@
 <template>
   <div class="floating-chat">
-    <!-- 悬浮按钮 -->
     <button 
       class="float-button"
       @click="isOpen = !isOpen"
@@ -10,13 +9,14 @@
       <span v-else>&times;</span>
     </button>
 
-    <!-- 对话框 -->
     <div class="chat-container" v-show="isOpen">
       <div class="chat-header">
         <h3>AI 助手</h3>
         <button class="close-button" @click="isOpen = false">&times;</button>
       </div>
-      <ChatDialog />
+      <div class="chat-body">
+        <ChatDialog />
+      </div>
     </div>
   </div>
 </template>
@@ -81,6 +81,7 @@ const isOpen = ref(false)
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .chat-header h3 {
@@ -96,6 +97,13 @@ const isOpen = ref(false)
   cursor: pointer;
   padding: 0;
   line-height: 1;
+}
+
+.chat-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {

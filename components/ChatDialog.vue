@@ -1,10 +1,13 @@
 <template>
   <div class="chat-dialog">
     <div class="messages" ref="messagesRef">
-      <div v-for="(msg, index) in messages" :key="index" :class="msg.role">
-        <strong>{{ msg.role === 'user' ? '你：' : 'AI：' }}</strong>
-        {{ msg.content }}
-      </div>
+      <template v-for="(msg, index) in messages" :key="index">
+        <div v-if="msg && msg.role" :class="msg.role">
+          <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
+          <span v-if="msg.content">{{ msg.content }}</span>
+          <span v-else>...</span>
+        </div>
+      </template>
     </div>
     
     <div class="input-area">
@@ -134,24 +137,38 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 10px;
+  height: calc(100% - 20px); /* 减去一些padding空间 */
+  max-height: 450px; /* 设置最大高度 */
+  position: relative;
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100% - 60px); /* 减去输入区域的高度 */
+  min-height: 200px; /* 设置最小高度 */
+}
+
+.input-area {
+  position: sticky;
+  bottom: 0;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #eee;
+  margin-top: auto;
+  z-index: 1;
 }
 
 .user, .assistant, .system {
-  padding: 0.5rem 1rem;
+  padding: 8px 12px;
   border-radius: 8px;
-  max-width: 80%;
-  white-space: pre-wrap;
+  max-width: 85%;
+  word-break: break-word;
+  margin-bottom: 4px;
 }
 
 .user {
@@ -170,31 +187,46 @@ const sendMessage = async () => {
   font-size: 0.9em;
 }
 
-.input-area {
-  display: flex;
-  gap: 0.5rem;
-}
-
 input {
   flex: 1;
-  padding: 0.5rem;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 14px;
 }
 
 button {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 自定义滚动条样式 */
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style> 
