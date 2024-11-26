@@ -4,7 +4,8 @@
       <template v-for="(msg, index) in messages" :key="index">
         <div v-if="msg && msg.role" :class="msg.role">
           <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
-          {{ msg.content || '...' }}
+          <span v-if="msg.content">{{ msg.content }}</span>
+          <span v-else>...</span>
         </div>
       </template>
     </div>
@@ -39,7 +40,7 @@ const sendMessage = async () => {
   isLoading.value = true
   
   try {
-    // 先将用户消息添加到消息列表
+    // 添加用户消息
     const userMessage = {
       role: 'user',
       content: userInput.value.trim()
@@ -51,8 +52,6 @@ const sendMessage = async () => {
       { role: 'system', content: 'You are a friendly assistant' },
       ...messages.value
     ]
-
-    console.log('发送的消息:', messageHistory)
 
     const response = await fetch(`${WORKER_URL}/ai/chat`, {
       method: 'POST',
@@ -68,7 +67,7 @@ const sendMessage = async () => {
       throw new Error(errorData.error || '请求失败')
     }
 
-    // 创建并添加 AI 回复的占位
+    // 创建 AI 回复消息
     const assistantMessage = {
       role: 'assistant',
       content: ''
@@ -84,14 +83,28 @@ const sendMessage = async () => {
         const { done, value } = await reader.read()
         if (done) break
         
-        // 解码并累加助手的回复
+        // 解码数据
         const chunk = decoder.decode(value)
+        // 处理多行数据
+        const lines = chunk.split('\n').filter(line => line.trim() !== '')
         
-        // 更新最后一条消息的内容
-        if (messages.value.length > 0) {
-          const lastMessage = messages.value[messages.value.length - 1]
-          if (lastMessage && lastMessage.role === 'assistant') {
-            lastMessage.content += chunk
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(5) // 移除 'data: ' 前缀
+            if (data === '[DONE]') continue
+            
+            try {
+              const jsonData = JSON.parse(data)
+              if (jsonData.response !== undefined) {
+                // 更新最后一条消息的内容
+                const lastMessage = messages.value[messages.value.length - 1]
+                if (lastMessage && lastMessage.role === 'assistant') {
+                  lastMessage.content += jsonData.response
+                }
+              }
+            } catch (e) {
+              console.error('解析 JSON 失败:', e)
+            }
           }
         }
       }
@@ -104,7 +117,6 @@ const sendMessage = async () => {
     userInput.value = ''
   } catch (error) {
     console.error('完整错误信息:', error)
-    // 确保错误消息对象结构完整
     messages.value.push({
       role: 'system',
       content: '发生错误: ' + (error.message || '未知错误')
