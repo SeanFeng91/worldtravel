@@ -1,13 +1,10 @@
 <template>
   <div class="chat-dialog">
-    <div class="messages">
-      <template v-for="(msg, index) in messages" :key="index">
-        <div v-if="msg && msg.role" :class="msg.role">
-          <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
-          <span v-if="msg.content">{{ msg.content }}</span>
-          <span v-else>...</span>
-        </div>
-      </template>
+    <div class="messages" ref="messagesRef">
+      <div v-for="(msg, index) in messages" :key="index" :class="msg.role">
+        <strong>{{ msg.role === 'user' ? '你：' : 'AI：' }}</strong>
+        {{ msg.content }}
+      </div>
     </div>
     
     <div class="input-area">
@@ -131,19 +128,15 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 1rem;
+  height: 100%;
+  padding: 10px;
 }
 
 .messages {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 500px;
+  flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 10px;
+  margin-bottom: 10px;
   border: 1px solid #eee;
   border-radius: 8px;
 }
