@@ -4,7 +4,7 @@
       <template v-for="(msg, index) in messages" :key="index">
         <div v-if="msg && msg.role" :class="msg.role">
           <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
-          <span v-if="msg.content" v-html="renderMarkdown(msg.content)"></span>
+          <div class="message-content" v-if="msg.content" v-html="renderMarkdown(msg.content)"></div>
           <span v-else>...</span>
         </div>
       </template>
@@ -153,24 +153,29 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 10px;
+  height: calc(100% - 20px);
+  max-height: 450px;
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message-content {
+  display: inline-block;
+  margin-left: 4px;
 }
 
 .user, .assistant, .system {
-  padding: 0.5rem 1rem;
+  padding: 8px 12px;
   border-radius: 8px;
-  max-width: 80%;
-  white-space: pre-wrap;
+  max-width: 85%;
+  word-break: break-word;
 }
 
 .user {
@@ -189,89 +194,75 @@ const sendMessage = async () => {
   font-size: 0.9em;
 }
 
+/* Markdown 样式调整 */
+:deep(p) {
+  margin: 0;
+  display: inline;
+}
+
+:deep(p + p) {
+  margin-top: 0.5em;
+  display: block;
+}
+
+:deep(ul), :deep(ol) {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+:deep(li + li) {
+  margin-top: 0.25em;
+}
+
+/* 滚动条样式 */
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 输入区域样式 */
 .input-area {
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #eee;
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 input {
   flex: 1;
-  padding: 0.5rem;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 14px;
 }
 
 button {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* 添加 Markdown 样式 */
-:deep(.messages) {
-  /* 允许样式穿透 */
-}
-
-:deep(p) {
-  margin: 0.5em 0;
-}
-
-:deep(code) {
-  background-color: #f5f5f5;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.9em;
-}
-
-:deep(pre) {
-  background-color: #f5f5f5;
-  padding: 1em;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-
-:deep(pre code) {
-  background-color: transparent;
-  padding: 0;
-}
-
-:deep(a) {
-  color: #0366d6;
-  text-decoration: none;
-}
-
-:deep(a:hover) {
-  text-decoration: underline;
-}
-
-:deep(ul), :deep(ol) {
-  padding-left: 1.5em;
-  margin: 0.5em 0;
-}
-
-:deep(blockquote) {
-  margin: 0.5em 0;
-  padding-left: 1em;
-  border-left: 3px solid #ddd;
-  color: #666;
-}
-
-:deep(strong) {
-  font-weight: 600;
-}
-
-:deep(em) {
-  font-style: italic;
 }
 </style> 
