@@ -20,7 +20,7 @@ export default defineConfig({
           items: [
             { text: '背景情况', link: '/guide/getting-started' },
             { text: 'AI 聊天助手', link: '/guide/how-to-write' },
-            { text: '完成情况', link: '/guide/progress-status' },
+            { text: '路线规划', link: '/guide/progress-status' },
             { text: '未来计划', link: '/guide/future-plan' },
             { text: '存在困难', link: '/guide/problems' },
             { text: 'AI 图像生成示例', link: '/guide/cloudflareAI.md' },
