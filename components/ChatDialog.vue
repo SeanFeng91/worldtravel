@@ -1,10 +1,12 @@
 <template>
   <div class="chat-dialog">
-    <div class="messages" ref="messagesRef">
-      <div v-for="(msg, index) in messages" :key="index" :class="msg.role">
-        <strong>{{ msg.role === 'user' ? '你：' : 'AI：' }}</strong>
-        {{ msg.content }}
-      </div>
+    <div class="messages">
+      <template v-for="(msg, index) in messages" :key="index">
+        <div v-if="msg && msg.role" :class="msg.role">
+          <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
+          {{ msg.content || '...' }}
+        </div>
+      </template>
     </div>
     
     <div class="input-area">
@@ -66,34 +68,46 @@ const sendMessage = async () => {
       throw new Error(errorData.error || '请求失败')
     }
 
+    // 创建并添加 AI 回复的占位
+    const assistantMessage = {
+      role: 'assistant',
+      content: ''
+    }
+    messages.value.push(assistantMessage)
+
     // 处理流式响应
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-    let assistantMessage = { role: 'assistant', content: '' }
     
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      
-      // 解码并累加助手的回复
-      const chunk = decoder.decode(value)
-      assistantMessage.content += chunk
-      
-      // 更新或添加助手的回复
-      if (messages.value[messages.value.length - 1].role === 'assistant') {
-        messages.value[messages.value.length - 1] = { ...assistantMessage }
-      } else {
-        messages.value.push({ ...assistantMessage })
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        // 解码并累加助手的回复
+        const chunk = decoder.decode(value)
+        
+        // 更新最后一条消息的内容
+        if (messages.value.length > 0) {
+          const lastMessage = messages.value[messages.value.length - 1]
+          if (lastMessage && lastMessage.role === 'assistant') {
+            lastMessage.content += chunk
+          }
+        }
       }
+    } catch (readError) {
+      console.error('读取流时出错:', readError)
+      throw new Error('读取 AI 响应时出错')
     }
 
     // 清空输入
     userInput.value = ''
   } catch (error) {
     console.error('完整错误信息:', error)
+    // 确保错误消息对象结构完整
     messages.value.push({
       role: 'system',
-      content: '发生错误: ' + error.message
+      content: '发生错误: ' + (error.message || '未知错误')
     })
   } finally {
     isLoading.value = false
