@@ -1,37 +1,37 @@
 {
-  "hash": "ce14ed97",
+  "hash": "6fc19864",
   "configHash": "53104f50",
-  "lockfileHash": "37ee348c",
-  "browserHash": "580c3092",
+  "lockfileHash": "76eae2a9",
+  "browserHash": "b793487c",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "ad376773",
+      "fileHash": "1fdaa55e",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "f59ff028",
+      "fileHash": "455b005f",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "05c4b104",
+      "fileHash": "2a17c0c2",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "b650e7bf",
+      "fileHash": "77f97bd5",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "99aadcb7",
+      "fileHash": "73ee8552",
       "needsInterop": false
     }
   },

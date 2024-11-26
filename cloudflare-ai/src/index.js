@@ -49,28 +49,44 @@ export default {
 	  try {
 		// 聊天功能
 		if (path === '/ai/chat') {
-		  if (request.method !== 'POST') {
-			return new Response(JSON.stringify({ error: '聊天功能只支持 POST 请求' }), {
-			  status: 405,
+		  try {
+			const { messages } = await request.json();
+			
+			// 添加明确的中文指令
+			const systemMessage = {
+			  role: 'system',
+			  content: '你是一个友好的中文助手。请始终使用简体中文回复，保持清晰的格式和结构。避免使用其他语言。'
+			};
+			
+			// 将系统指令添加到消息数组的开头
+			const messageHistory = [
+			  systemMessage,
+			  ...messages
+			];
+
+			const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
+			  messages: messageHistory,
+			  stream: true,
+			  max_tokens: 1000,
+			  temperature: 0.7,
+			});
+
+			return new Response(stream, {
 			  headers: {
 				...corsHeaders,
-				'Content-Type': 'application/json'
-			  }
+				'Content-Type': 'text/event-stream',
+			  },
+			});
+		  } catch (error) {
+			console.error('处理聊天请求时出错:', error);
+			return new Response(JSON.stringify({ 
+			  error: error.message,
+			  details: '处理聊天请求时出错'
+			}), {
+			  status: 500,
+			  headers: { ...corsHeaders }
 			});
 		  }
-  
-		  const { messages } = await request.json();
-		  const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
-			messages,
-			stream: true,
-		  });
-  
-		  return new Response(stream, {
-			headers: {
-			  ...corsHeaders,
-			  'Content-Type': 'text/event-stream',
-			},
-		  });
 		} 
 		// 图片生成功能
 		else if (path === '/ai/image') {

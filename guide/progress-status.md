@@ -1,4 +1,7 @@
-# 完成情况 :pencil:
+# 路径规划示例
 
-结构项目各个模块，记录博客的完成情况。
+<script setup>
+import MapComponent from '../components/MapboxExample.vue';
+</script>
 
+<MapComponent />
