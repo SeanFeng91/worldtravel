@@ -4,7 +4,7 @@
       <template v-for="(msg, index) in messages" :key="index">
         <div v-if="msg && msg.role" :class="msg.role">
           <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
-          <span v-if="msg.content">{{ msg.content }}</span>
+          <span v-if="msg.content" v-html="renderMarkdown(msg.content)"></span>
           <span v-else>...</span>
         </div>
       </template>
@@ -26,6 +26,22 @@
 
 <script setup>
 import { ref } from 'vue'
+import MarkdownIt from 'markdown-it'
+
+const md = new MarkdownIt({
+  html: true,
+  breaks: true,
+  linkify: true
+})
+
+const renderMarkdown = (content) => {
+  try {
+    return md.render(content)
+  } catch (e) {
+    console.error('Markdown 渲染错误:', e)
+    return content
+  }
+}
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL.replace(/\/$/, '')
 const API_KEY = import.meta.env.VITE_API_KEY
@@ -137,38 +153,24 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  height: calc(100% - 20px); /* 减去一些padding空间 */
-  max-height: 450px; /* 设置最大高度 */
-  position: relative;
+  height: 100%;
+  padding: 10px;
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: calc(100% - 60px); /* 减去输入区域的高度 */
-  min-height: 200px; /* 设置最小高度 */
-}
-
-.input-area {
-  position: sticky;
-  bottom: 0;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #eee;
-  margin-top: auto;
-  z-index: 1;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
 
 .user, .assistant, .system {
-  padding: 8px 12px;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
-  max-width: 85%;
-  word-break: break-word;
-  margin-bottom: 4px;
+  max-width: 80%;
+  white-space: pre-wrap;
 }
 
 .user {
@@ -187,23 +189,27 @@ const sendMessage = async () => {
   font-size: 0.9em;
 }
 
+.input-area {
+  display: flex;
+  gap: 0.5rem;
+}
+
 input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 1rem;
 }
 
 button {
-  padding: 8px 16px;
+  padding: 0.5rem 1rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  white-space: nowrap;
+  font-size: 1rem;
 }
 
 button:disabled {
@@ -211,22 +217,61 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* 自定义滚动条样式 */
-.messages::-webkit-scrollbar {
-  width: 6px;
+/* 添加 Markdown 样式 */
+:deep(.messages) {
+  /* 允许样式穿透 */
 }
 
-.messages::-webkit-scrollbar-track {
-  background: #f1f1f1;
+:deep(p) {
+  margin: 0.5em 0;
+}
+
+:deep(code) {
+  background-color: #f5f5f5;
+  padding: 0.2em 0.4em;
   border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
 }
 
-.messages::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
+:deep(pre) {
+  background-color: #f5f5f5;
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
 }
 
-.messages::-webkit-scrollbar-thumb:hover {
-  background: #555;
+:deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+}
+
+:deep(a) {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+:deep(a:hover) {
+  text-decoration: underline;
+}
+
+:deep(ul), :deep(ol) {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+:deep(blockquote) {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid #ddd;
+  color: #666;
+}
+
+:deep(strong) {
+  font-weight: 600;
+}
+
+:deep(em) {
+  font-style: italic;
 }
 </style> 
