@@ -1,6 +1,18 @@
 <template>
   <div class="chat-dialog">
     <div class="messages" ref="messagesRef">
+      <div class="assistant welcome-message">
+        <strong>AI：</strong>
+        <div class="message-content">
+          👋 你好！我是 AI 助手，很高兴为您服务。我可以：
+          <ul>
+            <li>回答您的问题</li>
+            <li>提供技术支持</li>
+            <li>帮助解决问题</li>
+          </ul>
+          请随时向我提问！
+        </div>
+      </div>
       <template v-for="(msg, index) in messages" :key="index">
         <div v-if="msg && msg.role" :class="msg.role">
           <strong>{{ msg.role === 'user' ? '你：' : msg.role === 'assistant' ? 'AI：' : '系统：' }}</strong>
@@ -153,8 +165,12 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  height: calc(100% - 20px);
-  max-height: 450px;
+  height: 500px; /* 固定高度 */
+  min-height: 500px; /* 最小高度 */
+  max-height: 500px; /* 最大高度 */
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .messages {
@@ -164,6 +180,20 @@ const sendMessage = async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: calc(100% - 60px); /* 减去输入区域的高度 */
+}
+
+.welcome-message {
+  margin-bottom: 16px;
+}
+
+.welcome-message ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.welcome-message li {
+  margin: 4px 0;
 }
 
 .message-content {
