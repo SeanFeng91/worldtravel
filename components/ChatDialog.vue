@@ -87,8 +87,13 @@ const sendMessage = async () => {
         
         for (const line of lines) {
           if (line.startsWith('data: ')) {
-            const data = line.slice(5) // 移除 'data: ' 前缀
-            if (data === '[DONE]') continue
+            const data = line.slice(5).trim() // 移除 'data: ' 前缀并清理空白
+            
+            // 跳过 [DONE] 标记
+            if (data === '[DONE]') {
+              console.log('收到完成标记')
+              continue
+            }
             
             try {
               const jsonData = JSON.parse(data)
@@ -100,7 +105,8 @@ const sendMessage = async () => {
                 }
               }
             } catch (e) {
-              console.error('解析 JSON 失败:', e)
+              console.log('跳过非 JSON 数据:', data)
+              continue
             }
           }
         }
