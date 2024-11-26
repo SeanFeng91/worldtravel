@@ -171,7 +171,7 @@
         map.removeLayer('route');
         map.removeSource('route');
       }
-  
+   
       // 添加新路线
       map.addSource('route', {
         type: 'geojson',
