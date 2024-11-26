@@ -165,22 +165,34 @@ const sendMessage = async () => {
 .chat-dialog {
   display: flex;
   flex-direction: column;
-  height: 500px; /* 固定高度 */
-  min-height: 500px; /* 最小高度 */
-  max-height: 500px; /* 最大高度 */
+  height: 500px;
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
+  padding-bottom: 70px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: calc(100% - 60px); /* 减去输入区域的高度 */
+}
+
+.input-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
 }
 
 .welcome-message {
@@ -222,54 +234,6 @@ const sendMessage = async () => {
   align-self: center;
   background: #fff3e0;
   font-size: 0.9em;
-}
-
-/* Markdown 样式调整 */
-:deep(p) {
-  margin: 0;
-  display: inline;
-}
-
-:deep(p + p) {
-  margin-top: 0.5em;
-  display: block;
-}
-
-:deep(ul), :deep(ol) {
-  margin: 0.5em 0;
-  padding-left: 1.5em;
-}
-
-:deep(li + li) {
-  margin-top: 0.25em;
-}
-
-/* 滚动条样式 */
-.messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.messages::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
-}
-
-.messages::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* 输入区域样式 */
-.input-area {
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #eee;
-  display: flex;
-  gap: 8px;
 }
 
 input {
