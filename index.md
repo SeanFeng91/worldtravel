@@ -22,11 +22,25 @@ features:
     link: /special/experience
 ---
 
-<div class="video-background">
-  <video autoplay loop muted playsinline>
-    <source src="/videos/STG_boost.mp4" type="video/mp4">
-  </video>
-</div>
+<script setup>
+import { onMounted, ref } from 'vue'
+import MapboxGlobal from './components/MapboxGlobal.vue'
+
+const showMap = ref(false)
+
+onMounted(() => {
+  // 延迟一下再显示地图组件
+  setTimeout(() => {
+    showMap.value = true
+  }, 500)
+})
+</script>
+
+<ClientOnly>
+  <div v-if="showMap">
+    <MapboxGlobal />
+  </div>
+</ClientOnly>
 
 <style>
 :root {
@@ -34,37 +48,38 @@ features:
   --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #3eaf7c 30%, #42d392);
 }
 
-.video-background {
-  position: fixed;
-  top: -200px; /* 将视频位置整体往上移动50像素 */
-  left: 0;
-  width: 100%;
-  height: calc(100%); /* 增加高度以补偿上移的距离 */
-  z-index: -1;
-  overflow: hidden;
+/* 调整主要内容的层级 */
+.VPHome {
+  position: relative;
+  z-index: 1;
+  background: transparent;
 }
 
-.video-background video {
-  min-width: 100%;
-  min-height: 110%;
-  width: auto;
-  height: auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  object-fit: cover;
+/* 确保 hero 部分在地图上层 */
+.VPHero {
+  position: relative;
+  z-index: 2;
+  background: transparent;
 }
 
-/* 添加一个半透明遮罩，使文字更容易阅读 */
-/* .video-background::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-} */
+/* 确保 features 部分在地图上层 */
+.VPFeatures {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+/* 可选：添加半透明背景使文字更易读 */
+.VPHero .container {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.VPFeatures .container {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+}
 </style>
 

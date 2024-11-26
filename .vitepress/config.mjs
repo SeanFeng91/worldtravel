@@ -146,7 +146,16 @@ export default defineConfig({
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
     ['meta', { name: 'docsearch:language', content: 'zh-CN' }],
-    ['meta', { name: 'docsearch:version', content: '1.0.0' }]
+    ['meta', { name: 'docsearch:version', content: '1.0.0' }],
+    ['script', { 
+      src: 'https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js',
+      crossorigin: 'anonymous'
+    }],
+    ['link', { 
+      rel: 'stylesheet', 
+      href: 'https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css',
+      crossorigin: 'anonymous'
+    }]
   ],
   
   vue: {
