@@ -23,24 +23,12 @@ features:
 ---
 
 <script setup>
-import { onMounted, ref } from 'vue'
 import MapboxGlobal from './components/MapboxGlobal.vue'
-
-const showMap = ref(false)
-
-onMounted(() => {
-  // 延迟一下再显示地图组件
-  setTimeout(() => {
-    showMap.value = true
-  }, 500)
-})
 </script>
 
-<ClientOnly>
-  <div v-if="showMap">
-    <MapboxGlobal />
-  </div>
-</ClientOnly>
+<div class="map-wrapper">
+  <MapboxGlobal />
+</div>
 
 <style>
 :root {
@@ -50,36 +38,47 @@ onMounted(() => {
 
 /* 调整主要内容的层级 */
 .VPHome {
-  position: relative;
+  /* position: relative; */
   z-index: 1;
-  background: transparent;
+  /* background: transparent; */
 }
 
 /* 确保 hero 部分在地图上层 */
 .VPHero {
-  position: relative;
-  z-index: 2;
-  background: transparent;
+  /* position: relative; */
+  z-index: 10;
+  /* background: transparent; */
 }
 
 /* 确保 features 部分在地图上层 */
 .VPFeatures {
-  position: relative;
-  z-index: 2;
-  background: transparent;
+  /* position: relative; */
+  z-index: 10;
+  /* background: transparent; */
 }
 
 /* 可选：添加半透明背景使文字更易读 */
 .VPHero .container {
-  background-color: rgba(255, 255, 255, 0.8);
+  /* background-color: rgba(255, 255, 255, 0.8); */
   padding: 20px;
   border-radius: 10px;
 }
 
 .VPFeatures .container {
-  background-color: rgba(255, 255, 255, 0.8);
+  /* background-color: rgba(255, 255, 255, 0.8); */
   padding: 20px;
   border-radius: 10px;
+
+}
+
+/* 添加地图包装器样式 */
+.map-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 8; /* 确保地图在最底层 */
 }
 </style>
 

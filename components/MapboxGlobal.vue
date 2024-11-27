@@ -8,8 +8,8 @@ export default {
   data() {
     return {
       map: null,
-      spinEnabled: true,
-      userInteracting: false
+      spinEnabled: true, // 控制地球是否自动旋转
+      userInteracting: false // 用户是否正在与地图交互
     }
   },
   mounted() {
@@ -31,25 +31,31 @@ export default {
     initializeMap() {
       try {
         console.log('开始初始化地图');
-        mapboxgl.accessToken = 'pk.eyJ1IjoiaGlhaGlhNDUiLCJhIjoiY2lvdHcyZ3FqMDBkOHUwbTRyMTk1MmR1eCJ9.2SdvRkolF1B_GSrABB_Pxg';
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaGlhaGlhNDUiLCJhIjoiY2lvdHcyZ3FqMDBkOHUwbTRyMTk1MmR1eCJ9.2SdvRkolF1B_GSrABB_Pxg'; // Mapbox访问令牌
         
         this.map = new mapboxgl.Map({
           container: 'map',
-          style: 'mapbox://styles/mapbox/streets-v9',
-          projection: 'globe',
-          zoom: 1,
-          center: [30, 15],
+          style: 'mapbox://styles/mapbox/light-v11', // 地图样式
+          projection: 'globe', // 使用球体投影
+          zoom: 6, // 初始缩放级别
+          center: [120.207825, 30.257943], // 初始中心点坐标（杭州）
+          
           preserveDrawingBuffer: true // 添加这个选项可能有助于解决某些渲染问题
         });
 
         console.log('地图实例创建成功');
 
-        this.map.addControl(new mapboxgl.NavigationControl());
-        this.map.scrollZoom.disable();
+        this.map.addControl(new mapboxgl.NavigationControl()); // 添加导航控件
+        // this.map.scrollZoom.disable(); // 禁用滚轮缩放
 
         this.map.on('style.load', () => {
           console.log('地图样式加载完成');
-          this.map.setFog({});
+          this.map.setFog({}); // 设置雾效果
+          
+          // 添加 marker
+          const marker = new mapboxgl.Marker({ color: 'black', rotation: 0 })
+            .setLngLat([120.207825, 30.257943]) // 使用杭州的坐标，你可以根据需要修改
+            .addTo(this.map); // 注意这里使用 this.map 而不是 map
         });
 
         // 设置事件监听器
@@ -72,9 +78,9 @@ export default {
       }
     },
     spinGlobe() {
-      const secondsPerRevolution = 240;
-      const maxSpinZoom = 5;
-      const slowSpinZoom = 3;
+      const secondsPerRevolution = 1000; // 完成一次旋转所需的秒数
+      const maxSpinZoom = 8; // 最大自动旋转的缩放级别
+      const slowSpinZoom = 3; // 开始减慢旋转速度的缩放级别
 
       const zoom = this.map.getZoom();
       if (this.spinEnabled && !this.userInteracting && zoom < maxSpinZoom) {
@@ -98,6 +104,7 @@ export default {
       this.map.remove();
     }
   }
+  
 }
 </script>
 
@@ -108,16 +115,17 @@ export default {
   left: 0;
   width: 100%;
   height: 100vh;
-  z-index: 0;
+  z-index: 1;
 }
 
 #map {
   position: absolute;
   width: 100%;
   height: 100%;
+  background-color: rgb(15, 16, 45) !important; /* 设置地图背景颜色 */
 }
 
 .mapboxgl-map {
-  z-index: 0;
+  z-index: 1;
 }
 </style>
