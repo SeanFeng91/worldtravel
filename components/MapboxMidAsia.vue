@@ -5,57 +5,37 @@
 </template>
 
 <script>
+const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
+
 export default {
   name: 'MapboxMiaAsia',
   data() {
     return {
       map: null,
-      mapboxToken: null,
       spinEnabled: true, // 控制地球是否自动旋转
       userInteracting: false // 用户是否正在与地图交互
     }
   },
-  async mounted() {
-    try {
-      const response = await fetch('/api/getMapboxToken');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError("返回的不是 JSON 数据!");
-      }
+  mounted() {
+    // 改用 setTimeout 来确保 mapboxgl 已加载
+    if (typeof window !== 'undefined') {
+      const checkMapbox = () => {
+        if (typeof mapboxgl !== 'undefined') {
+          this.initializeMap();
+        } else {
+          console.log('等待 Mapbox GL JS 加载...');
+          setTimeout(checkMapbox, 100);
+        }
+      };
       
-      const data = await response.json();
-      if (!data.token) {
-        throw new Error('Token 不存在!');
-      }
-      
-      this.mapboxToken = data.token;
-      console.log('成功获取 token');
-      
-      // 初始化地图
-      if (typeof window !== 'undefined') {
-        const checkMapbox = () => {
-          if (typeof mapboxgl !== 'undefined') {
-            this.initializeMap();
-          } else {
-            console.log('等待 Mapbox GL JS 加载...');
-            setTimeout(checkMapbox, 100);
-          }
-        };
-        checkMapbox();
-      }
-    } catch (error) {
-      console.error('获取 Mapbox token 失败:', error);
-      console.log('完整的错误响应:', await response.text()); // 添加这行来查看具体返回了什么
+      checkMapbox();
     }
   },
   methods: {
     initializeMap() {
       try {
         console.log('开始初始化地图');
-        mapboxgl.accessToken = this.mapboxToken; // 使用获取到的 token
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN; // Mapbox访问令牌
         
         this.map = new mapboxgl.Map({
           container: 'map',
