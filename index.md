@@ -16,10 +16,12 @@ features:
   - icon: 🗺️
     title: 交互式地图
     details: 使用交互式地图规划你的旅行路线
+    link: /guide/future-plan
   - icon: 📝
-    title: 经验分享
-    details: 来自资深旅行者的第一手经验
-    link: /special/experience
+    title: 出行计划
+    details: 为下一次出行做好充足的准备
+    link: /trip-plan/midasia-three
+
 ---
 
 <script setup>

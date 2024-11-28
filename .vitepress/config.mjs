@@ -26,13 +26,22 @@ export default defineConfig({
             { text: 'AI 图像生成示例', link: '/guide/cloudflareAI.md' },
           ]
         },
+        // {
+        //   text: '实用攻略',
+        //   items: [
+        //     { text: '交通攻略', link: '/guide/transport' },
+        //     { text: '住宿建议', link: '/guide/accommodation' },
+        //     { text: '间管理', link: '/guide/time' },
+        //     { text: '行前准备', link: '/guide/preparation' },
+        //   ]
+        // }
+      ],
+      '/trip-plan/':[
         {
-          text: '实用攻略',
-          items: [
-            { text: '交通攻略', link: '/guide/transport' },
-            { text: '住宿建议', link: '/guide/accommodation' },
-            { text: '间管理', link: '/guide/time' },
-            { text: '行前准备', link: '/guide/preparation' },
+          text:'出行计划',
+          collapsed: true,
+          items:[
+            {text:'中亚三国',link:'/trip-plan/midasia-three'}
           ]
         }
       ],
