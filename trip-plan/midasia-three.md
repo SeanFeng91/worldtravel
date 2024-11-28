@@ -1,14 +1,27 @@
 <script setup>
 import MapboxMidAsia from '../components/MapboxMidAsia.vue';
-// import MapboxGlobal from '../components/MapboxGlobal.vue';
+import ImageCarousel from '../components/ImageCarousel.vue';
 
+const images = [
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785213107_image.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785777202_image.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785418419_image.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785518977_b9121960a3d296049538d6a92a796da9.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785498287_ece310c8ba1d2fd0ee401cceaa4744e7.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785508037_52c91b236966f5996aa344f97651ee04.png',
+  'https://cloudflare-imgbed-1d8.pages.dev/file/1732785780106_image.png'
+]
 </script>
-
 
 # 行程计划
 <!-- 地图组件 -->
 <ClientOnly>
   <MapboxMidAsia />
+</ClientOnly>
+
+<!-- 图片轮播 -->
+<ClientOnly>
+  <ImageCarousel :images="images" />
 </ClientOnly>
 
 ::: tip 提示
@@ -19,9 +32,6 @@ import MapboxMidAsia from '../components/MapboxMidAsia.vue';
 5. 在进出阿塞拜疆时可能会遇到工作人员提问，比如下一站去哪里，大家只说去格鲁吉亚就可以了，不要说去亚美尼亚，说几个格鲁吉亚的地名，如第比利斯，BATUMI，库塔依西，等。
 6. 不要让阿塞拜疆的海关看到大家有亚美尼亚签证，分开放为好。签证最好在回国后再丢弃，中途请保管好。
 :::
-![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785213107_image.png)
-![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785418419_image.png)
-![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785498287_ece310c8ba1d2fd0ee401cceaa4744e7.png)
 
 ## 第1天  杭州-乌鲁木齐-第比利斯
 ### 出发了
@@ -147,7 +157,7 @@ Duduk（杜杜克笛）的制造材料取自杏树，是世界上最古老的双
 
 **【十七世纪圆顶古硫磺浴池】**（外观游览 20 分钟）古老的第比利斯温泉是利用塔博尔山地流出含硫磺矿物质的天然温泉水来沐浴，是当地人们交流情感的根据地**。**
 
-**【格鲁吉亚编年史纪念碑】**（外观游览 40 分钟）“格鲁吉亚编年史”——是一个纪念碑石柱，位于 Temka，Keeni山，纳扎拉德维地区。这座纪念碑建于 1980 年，其作者是著名的雕塑家祖拉布·特雷特利。 纪念碑描绘了各种历史和宗教事件的场景，以及格鲁吉亚文学作品中的故事。青 铜和石雕描绘了与主有关的伟大日子和基督生命的浮雕。 从此处可以俯瞰整个第比利斯海。
+**【格鲁吉亚编年史纪念碑】**（外观游览 40 分钟）“格鲁吉亚编年史”——是一个纪念碑石柱，位于 Temka，Keeni山，纳扎拉德维地区。这座纪念碑建于 1980 年，其作者是著名的雕塑家祖拉布·特雷特利。 纪念碑描绘了各种历史和宗教事件的场景，以及格鲁吉亚文学作品中的故事。青 铜和石雕描绘了与主有关的伟大日子和基���生命的浮雕��� 从此处可以俯瞰整个第比利斯海。
 
 晚餐后送往机场搭乘航班前往阿塞拜疆首都-巴库
 
