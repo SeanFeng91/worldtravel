@@ -8,3 +8,9 @@ https://mp.weixin.qq.com/s/nC27JRinPNg2cMhhcaTbtA
 4. 消费额度：200/100/50美金餐饮额度或者SPA消费额度等（需预订专享价）👇例子为珠海瑞吉👇
 5. 特殊礼遇：住4付3、住3付2、保证升级行政客房、保证升级套房等（需预订专享价）👇例子为新加坡费尔蒙👇
 6. 代订礼遇：入住人享受（专享价）礼遇，预订人获得八大洲积分
+
+## 推文介绍
+
+介绍[八大洲的推文](https://mp.weixin.qq.com/s/nC27JRinPNg2cMhhcaTbtA)
+
+[科普FHR、八大洲、信用卡等订房渠道](https://mp.weixin.qq.com/s/UM2sFnEAb8FSUHzjsR4frA)

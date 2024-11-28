@@ -19,6 +19,9 @@ import MapboxMidAsia from '../components/MapboxMidAsia.vue';
 5. 在进出阿塞拜疆时可能会遇到工作人员提问，比如下一站去哪里，大家只说去格鲁吉亚就可以了，不要说去亚美尼亚，说几个格鲁吉亚的地名，如第比利斯，BATUMI，库塔依西，等。
 6. 不要让阿塞拜疆的海关看到大家有亚美尼亚签证，分开放为好。签证最好在回国后再丢弃，中途请保管好。
 :::
+![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785213107_image.png)
+![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785418419_image.png)
+![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1732785498287_ece310c8ba1d2fd0ee401cceaa4744e7.png)
 
 ## 第1天  杭州-乌鲁木齐-第比利斯
 ### 出发了
