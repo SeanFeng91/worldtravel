@@ -54,8 +54,9 @@
   import { ref, onMounted } from 'vue';
   import mapboxgl from 'mapbox-gl';
   import 'mapbox-gl/dist/mapbox-gl.css';
-  
-  const accessToken = 'pk.eyJ1IjoiaGlhaGlhNDUiLCJhIjoiY2lvdHcyZ3FqMDBkOHUwbTRyMTk1MmR1eCJ9.2SdvRkolF1B_GSrABB_Pxg';
+  const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
+
+  const accessToken = MAPBOX_ACCESS_TOKEN;
   
   // 地址输入和地图对象
   const startAddress = ref('');

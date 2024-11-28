@@ -3,6 +3,8 @@
 </template>
 
 <script>
+const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
+
 export default {
   name: 'MapboxGlobal',
   data() {
@@ -31,7 +33,7 @@ export default {
     initializeMap() {
       try {
         console.log('开始初始化地图');
-        mapboxgl.accessToken = 'pk.eyJ1IjoiaGlhaGlhNDUiLCJhIjoiY2lvdHcyZ3FqMDBkOHUwbTRyMTk1MmR1eCJ9.2SdvRkolF1B_GSrABB_Pxg'; // Mapbox访问令牌
+        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN; // Mapbox访问令牌
         
         this.map = new mapboxgl.Map({
           container: 'map',
