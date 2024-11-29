@@ -76,6 +76,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import TravelMap from './TravelMap.vue'
 import { useData } from 'vitepress'
+import { marked } from 'marked'
 
 const API_BASE = import.meta.env.VITE_WORKER_URL
 const API_KEY = import.meta.env.VITE_API_KEY
@@ -93,7 +94,12 @@ const handleStream = async (response) => {
   const decoder = new TextDecoder();
   let buffer = '';
 
-  // 确保有一个助手消息
+  // 配置 marked 选项
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+  });
+
   if (messages.value[messages.value.length - 1].role !== 'assistant') {
     messages.value.push({
       role: 'assistant',
@@ -105,35 +111,30 @@ const handleStream = async (response) => {
     const { done, value } = await reader.read();
     if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
+    // 处理接收到的文本
+    const text = decoder.decode(value, { stream: true });
+    
+    // 将文本按行分割并处理
+    const lines = (buffer + text).split('\n');
     buffer = lines.pop() || '';
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
-        const data = line.slice(6); // 移除 'data: ' 前缀
-        
+        const data = line.slice(6);
         try {
           const parsed = JSON.parse(data);
           if (parsed.response) {
-            // 处理普通文本响应
-            messages.value[messages.value.length - 1].content += parsed.response;
+            // 处理文本，确保不会出现一个字一行的情况
+            const processedText = parsed.response
+              .replace(/\n+/g, '<br>') // 将连续的换行符替换为单个 HTML 换行标签
+              .replace(/\s+/g, ' '); // 合并多个空格
+            
+            // 更新消息内容
+            const lastMessage = messages.value[messages.value.length - 1];
+            lastMessage.content = (lastMessage.content || '') + processedText;
           }
         } catch (e) {
-          // 如果解析失败，尝试提取完整的 travel_plan JSON
-          if (data.includes('"type":"travel_plan"')) {
-            try {
-              const planJson = data.match(/\{[\s\S]*"type"\s*:\s*"travel_plan"[\s\S]*\}/);
-              if (planJson) {
-                const plan = JSON.parse(planJson[0]);
-                currentPlan.value = plan;
-                const markdownText = formatTravelPlan(plan);
-                messages.value[messages.value.length - 1].content = markdownText;
-              }
-            } catch (err) {
-              console.log('等待完整的旅行计划数据...');
-            }
-          }
+          console.error('解析响应失败:', e);
         }
       }
     }
@@ -401,28 +402,45 @@ button:disabled {
 }
 
 .message-content {
+  white-space: pre-wrap !important;
+  word-break: normal !important;
+  word-wrap: break-word !important;
   line-height: 1.6;
+  display: inline-block;
+  width: 100%;
 }
 
-.message-content :deep(h1) {
-  font-size: 1.8em;
-  margin-bottom: 1em;
+/* Markdown 样式 */
+.message-content :deep(strong),
+.message-content :deep(b) {
+  font-weight: 600;
   color: var(--vp-c-brand);
 }
 
-.message-content :deep(h2) {
-  font-size: 1.5em;
-  margin: 1em 0;
-  color: var(--vp-c-brand);
+.message-content :deep(em),
+.message-content :deep(i) {
+  font-style: italic;
 }
 
-.message-content :deep(h3) {
-  font-size: 1.2em;
-  margin: 0.8em 0;
+.message-content :deep(h1),
+.message-content :deep(h2),
+.message-content :deep(h3),
+.message-content :deep(h4) {
+  margin: 1em 0 0.5em 0;
+  font-weight: 600;
 }
 
-.message-content :deep(ul) {
+.message-content :deep(ul),
+.message-content :deep(ol) {
   padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.message-content :deep(li) {
+  margin: 0.3em 0;
+}
+
+.message-content :deep(p) {
   margin: 0.5em 0;
 }
 
@@ -433,11 +451,10 @@ button:disabled {
   background: var(--vp-c-bg-soft);
 }
 
-.message-content :deep(p) {
+/* 确保中文文本正常显示 */
+.message-content p {
   margin: 0.5em 0;
-}
-
-.message-content :deep(strong) {
-  color: var(--vp-c-brand);
+  display: block;
+  white-space: normal !important;
 }
 </style> 
