@@ -45,7 +45,8 @@ export default defineConfig({
               collapsed: true,
               items:[
                 {text:'13天行程',link:'/trip-plan/midasia-three'},
-                {text:'参考资料',link:'/trip-plan/reference'}
+                {text:'参考资料',link:'/trip-plan/reference'},
+                {text:'旅行规划助手',link:'/trip-plan/travel-agent'}
               ]
             }
           ]

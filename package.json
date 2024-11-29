@@ -15,6 +15,7 @@
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.8.0",
     "markdown-it": "^14.1.0",
+    "markdown-it-emoji": "^3.0.0",
     "vue": "^3.3.0"
   },
   "devDependencies": {
