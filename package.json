@@ -12,12 +12,16 @@
     "docs:preview": "vitepress preview ."
   },
   "dependencies": {
+    "@langchain/community": "^0.3.16",
+    "@langchain/core": "^0.3.19",
+    "langchain": "^0.3.6",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.8.0",
     "markdown-it": "^14.1.0",
     "markdown-it-emoji": "^3.0.0",
     "marked": "^15.0.3",
     "vue": "^3.3.0"
+    
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

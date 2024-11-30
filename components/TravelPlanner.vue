@@ -6,7 +6,7 @@
         <div class="chat-messages" ref="chatContainer">
           <div v-for="(msg, index) in messages" :key="index" 
                :class="['message', msg.role]">
-            <div class="message-content" v-html="msg.content">
+            <div class="message-content" v-html="formattedContent(msg.content)">
             </div>
           </div>
         </div>
@@ -71,7 +71,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue'
 import TravelMap from './TravelMap.vue'
@@ -89,56 +88,37 @@ const savedPlans = ref([])
 const chatContainer = ref(null)
 const currentMessage = ref('')
 
-const handleStream = async (response) => {
+const handleStreamResponse = async (response, onUpdate) => {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
-
-  // 配置 marked 选项
-  marked.setOptions({
-    breaks: true,
-    gfm: true,
-  });
-
-  if (messages.value[messages.value.length - 1].role !== 'assistant') {
-    messages.value.push({
-      role: 'assistant',
-      content: ''
-    });
-  }
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    // 处理接收到的文本
-    const text = decoder.decode(value, { stream: true });
-    
-    // 将文本按行分割并处理
-    const lines = (buffer + text).split('\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6);
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.response) {
-            // 处理文本，确保不会出现一个字一行的情况
-            const processedText = parsed.response
-              .replace(/\n+/g, '<br>') // 将连续的换行符替换为单个 HTML 换行标签
-              .replace(/\s+/g, ' '); // 合并多个空格
-            
-            // 更新消息内容
-            const lastMessage = messages.value[messages.value.length - 1];
-            lastMessage.content = (lastMessage.content || '') + processedText;
+  let currentResponse = '';
+  
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.response) {
+              // 更新当前响应
+              currentResponse += data.response;
+              // 调用回调函数更新消息内容
+              onUpdate(currentResponse);
+            }
+          } catch (e) {
+            console.error('解析响应数据失败:', e);
           }
-        } catch (e) {
-          console.error('解析响应失败:', e);
         }
       }
     }
-    await nextTick();
+  } finally {
+    reader.releaseLock();
   }
 };
 
@@ -172,13 +152,20 @@ const sendMessage = async () => {
   
   const userMessage = {
     role: 'user',
-    content: userInput.value.trim()
+    content: userInput.value.trim().replace(/\n+$/, '')
   };
   
   messages.value.push(userMessage);
   userInput.value = '';
   isLoading.value = true;
   
+  // 创建 AI 回复消息
+  const assistantMessage = {
+    role: 'assistant',
+    content: ''
+  };
+  messages.value.push(assistantMessage);
+
   try {
     const response = await fetch(`${API_BASE}/ai/travel-chat`, {
       method: 'POST',
@@ -193,7 +180,50 @@ const sendMessage = async () => {
       throw new Error(`请求失败: ${response.status}`);
     }
 
-    await handleStream(response);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            if (line.includes('[DONE]')) continue;
+            
+            const data = JSON.parse(line.slice(6));
+            if (data.response !== undefined) {
+              // 处理文本
+              buffer += data.response;
+              
+              // 处理连续换行和句子结束后的换行
+              const processedText = buffer
+                .replace(/([。！？.!?])\n+/g, '$1\n') // 句子结束后最多一个换行
+                .replace(/\n{3,}/g, '\n\n') // 多个连续换行替换为两个
+                .replace(/([：])\n+/g, '$1') // 冒号后不换行
+                .replace(/^([•\-])/gm, '\n$1'); // 列表项前添加换行
+              
+              assistantMessage.content = processedText;
+              messages.value = [...messages.value];
+              
+              // 滚动到底部
+              await nextTick();
+              if (chatContainer.value) {
+                chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+              }
+            }
+          } catch (e) {
+            console.error('解析数据失败:', e);
+          }
+        }
+      }
+    }
+
   } catch (error) {
     console.error('发送消息失败:', error);
     messages.value.push({
@@ -205,6 +235,51 @@ const sendMessage = async () => {
   }
 };
 
+// 添加消息样式
+const messageClass = (role) => {
+  return {
+    message: true,
+    [role]: true
+  };
+};
+
+// 添加 marked 配置
+const markedOptions = {
+  breaks: true,
+  gfm: true
+};
+
+// 添加消息内容的计算属性
+const formattedContent = (content) => {
+  if (!content) return '';
+  try {
+    // 配置 marked 选项
+    marked.setOptions({
+      gfm: true,
+      breaks: false, // 禁用自动换行
+      smartLists: true,
+    });
+    
+    // 预处理文本
+    const processedContent = content
+      .replace(/\n{3,}/g, '\n\n') // 多个换行替换为两个
+      .replace(/([：])\n/g, '$1') // 冒号后的换行删除
+      .replace(/([。！？.!?])\n+/g, '$1\n') // 句号后最多一个换行
+      .replace(/^[•\-]\s*/gm, '• '); // 统一列表符号格式
+    
+    return marked(processedContent);
+  } catch (e) {
+    console.error('Markdown 渲染错误:', e);
+    return content;
+  }
+};
+
+// 辅助函数：提取行程总览
+function extractOverview(text) {
+  const match = text.match(/\*\*行程总览\*\*:\s*([^\n]+)/);
+  return match ? match[1].trim() : '';
+}
+
 // 监听消息变化，自动滚动到底部
 watch(() => messages.value.length, () => {
   nextTick(() => {
@@ -215,28 +290,28 @@ watch(() => messages.value.length, () => {
 })
 
 // 加载已保存的计划
-const loadSavedPlans = async () => {
-  try {
-    const response = await fetch(`${API_BASE}/ai/travel-plans`, {
-      headers: { 'X-API-Key': API_KEY }
-    })
-    savedPlans.value = await response.json()
-  } catch (error) {
-    console.error('加载已保存计划失败:', error)
-  }
-}
+// const loadSavedPlans = async () => {
+//   try {
+//     const response = await fetch(`${API_BASE}/ai/travel-plans`, {
+//       headers: { 'X-API-Key': API_KEY }
+//     })
+//     savedPlans.value = await response.json()
+//   } catch (error) {
+//     console.error('加载已保存计划失败:', error)
+//   }
+// }
 
 // 加载特定计划
-const loadPlan = async (planId) => {
-  try {
-    const response = await fetch(`${API_BASE}/ai/travel-plans/${planId}`, {
-      headers: { 'X-API-Key': API_KEY }
-    })
-    currentPlan.value = await response.json()
-  } catch (error) {
-    console.error('加载计划详情失败:', error)
-  }
-}
+// const loadPlan = async (planId) => {
+//   try {
+//     const response = await fetch(`${API_BASE}/ai/travel-plans/${planId}`, {
+//       headers: { 'X-API-Key': API_KEY }
+//     })
+//     currentPlan.value = await response.json()
+//   } catch (error) {
+//     console.error('加载计划详情失败:', error)
+//   }
+// }
 
 // 删除计划
 const deletePlan = async (planId) => {
@@ -247,10 +322,10 @@ const deletePlan = async (planId) => {
       method: 'DELETE',
       headers: { 'X-API-Key': API_KEY }
     })
-    await loadSavedPlans()
-    if (currentPlan.value?.plan_id === planId) {
-      currentPlan.value = null
-    }
+    // await loadSavedPlans()
+    // if (currentPlan.value?.plan_id === planId) {
+    //   currentPlan.value = null
+    // }
   } catch (error) {
     console.error('删除计划失败:', error)
   }
@@ -262,44 +337,119 @@ const focusDay = (day) => {
   // 需要在 TravelMap 组件中实现
 }
 
-onMounted(() => {
-  loadSavedPlans()
-})
+// onMounted(() => {
+//   loadSavedPlans()
+// })
+
+// 添加解析函数
+const parseItinerary = (content) => {
+  const itinerary = {
+    locations: [],
+    overview: '',
+    days: []
+  };
+
+  try {
+    // 匹配行程总览
+    const overviewMatch = content.match(/行程总览[:：](.*?)(?=\n|$)/);
+    if (overviewMatch) {
+      itinerary.overview = overviewMatch[1].trim();
+    }
+
+    // 匹配每一天的行程
+    const dayPattern = /第(\d+)天[^]*?(?=第\d+天|$)/g;
+    const timePattern = /([上中下午晚]午|早上|凌晨).*?[（(](\d{1,2}:\d{2})[-~到至](\d{1,2}:\d{2})[）)]/g;
+    const locationPattern = /([上中下午晚]午|早上|凌晨)[：:]\s*(.+?)\s*(?=[（(]|$)/g;
+
+    let dayMatch;
+    while ((dayMatch = dayPattern.exec(content)) !== null) {
+      const dayContent = dayMatch[0];
+      const dayNumber = parseInt(dayMatch[1]);
+      const dayLocations = [];
+
+      // 提取当天的所有地点和时间
+      let timeMatch;
+      while ((timeMatch = timePattern.exec(dayContent)) !== null) {
+        const locationMatch = locationPattern.exec(dayContent);
+        if (locationMatch) {
+          dayLocations.push({
+            period: timeMatch[1],
+            location: locationMatch[2],
+            startTime: timeMatch[2],
+            endTime: timeMatch[3],
+            day: dayNumber
+          });
+        }
+      }
+
+      itinerary.days.push({
+        day: dayNumber,
+        locations: dayLocations
+      });
+
+      // 将所有地点添加到总地点列表
+      itinerary.locations.push(...dayLocations);
+    }
+
+  } catch (error) {
+    console.error('解析行程失败:', error);
+  }
+
+  return itinerary;
+};
+
+// 修改消息处理逻辑
+const handleMessage = async (content) => {
+  // ... 其他代码保持不变 ...
+
+  // 当收到完整消息时解析行程
+  if (content.includes('行程总览') || content.includes('第1天')) {
+    const parsedItinerary = parseItinerary(content);
+    currentPlan.value = parsedItinerary;
+    
+    // 如果需要，可以在这里调用地图组件的方法来更新标记
+    if (mapRef.value) {
+      mapRef.value.updateMarkers(parsedItinerary.locations);
+    }
+  }
+};
 </script>
 
 <style scoped>
 .travel-planner {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 20px;
   gap: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  height: calc(100vh - 40px);
 }
 
 .layout {
   display: flex;
+  flex-direction: column;
   gap: 20px;
-  height: calc(100vh - 200px);
   width: 100%;
+  height: 100%;
 }
 
 .chat-section {
-  flex: 1;
+  width: 100%;
+  height: 45%;
+  min-height: 500px;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
-  overflow: hidden;
-  min-width: 400px;
 }
 
 .chat-messages {
+  width: 100%;
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 10px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
 }
 
 .message {
@@ -320,27 +470,27 @@ onMounted(() => {
 }
 
 .input-area {
-  padding: 20px;
-  border-top: 1px solid var(--vp-c-divider);
+  width: 100%;
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 }
 
 .input-area textarea {
+  height: 40px;
+  max-height: 80px;
   flex: 1;
   min-height: 60px;
   padding: 8px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
-  resize: none;
+  resize: vertical;
 }
 
 .map-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 400px;
+  width: 100%;
+  height: 50%;
+  min-height: 400px;
 }
 
 .plan-details {
@@ -402,59 +552,52 @@ button:disabled {
 }
 
 .message-content {
-  white-space: pre-wrap !important;
-  word-break: normal !important;
-  word-wrap: break-word !important;
+  white-space: pre-line;
+  word-break: break-word;
   line-height: 1.6;
-  display: inline-block;
-  width: 100%;
+  padding: 8px;
 }
 
-/* Markdown 样式 */
-.message-content :deep(strong),
-.message-content :deep(b) {
-  font-weight: 600;
-  color: var(--vp-c-brand);
-}
-
-.message-content :deep(em),
-.message-content :deep(i) {
-  font-style: italic;
-}
-
-.message-content :deep(h1),
-.message-content :deep(h2),
-.message-content :deep(h3),
-.message-content :deep(h4) {
-  margin: 1em 0 0.5em 0;
-  font-weight: 600;
-}
-
-.message-content :deep(ul),
-.message-content :deep(ol) {
-  padding-left: 1.5em;
-  margin: 0.5em 0;
+.message-content :deep(ul) {
+  margin: 0.3em 0;
+  padding-left: 1em;
+  list-style-type: none;
 }
 
 .message-content :deep(li) {
-  margin: 0.3em 0;
+  margin: 0.2em 0;
+  padding-left: 0.5em;
 }
 
 .message-content :deep(p) {
-  margin: 0.5em 0;
+  margin: 0.2em 0;
 }
 
-.message-content :deep(blockquote) {
-  border-left: 4px solid var(--vp-c-brand);
-  padding: 0.5em 1em;
-  margin: 1em 0;
-  background: var(--vp-c-bg-soft);
+/* 移除标题的额外边距 */
+.message-content :deep(h1),
+.message-content :deep(h2),
+.message-content :deep(h3) {
+  margin: 0.5em 0 0.3em 0;
+}
+
+/* 调整列表项的样式 */
+.message-content :deep(ul li::before) {
+  content: "•";
+  color: var(--vp-c-brand);
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
 }
 
 /* 确保中文文本正常显示 */
-.message-content p {
-  margin: 0.5em 0;
-  display: block;
-  white-space: normal !important;
+.message-content :deep(*) {
+  white-space: normal;
+}
+
+/* 确保地图容器占满宽度 */
+:deep(.mapboxgl-map) {
+  width: 100% !important;
+  height: 100% !important;
 }
 </style> 
+

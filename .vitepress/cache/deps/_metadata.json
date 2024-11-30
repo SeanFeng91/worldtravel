@@ -1,49 +1,55 @@
 {
-  "hash": "0b1b525e",
-  "configHash": "53104f50",
-  "lockfileHash": "d496d8db",
-  "browserHash": "388ae5b7",
+  "hash": "56d38f7a",
+  "configHash": "c5ae401f",
+  "lockfileHash": "55622a7f",
+  "browserHash": "818f0e64",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "6bbe8cf2",
+      "fileHash": "44e04e84",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "f6c21d45",
+      "fileHash": "20dab0cd",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "8e936751",
+      "fileHash": "4628594e",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "329fb37f",
+      "fileHash": "030bb3f3",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "45b1f712",
+      "fileHash": "a6fb890f",
       "needsInterop": false
     },
     "marked": {
       "src": "../../../node_modules/marked/lib/marked.esm.js",
       "file": "marked.js",
-      "fileHash": "7b1c18ff",
+      "fileHash": "1beeff96",
       "needsInterop": false
+    },
+    "mapbox-gl": {
+      "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
+      "file": "mapbox-gl.js",
+      "fileHash": "cb47ca3f",
+      "needsInterop": true
     }
   },
   "chunks": {
-    "chunk-THPMFJZZ": {
-      "file": "chunk-THPMFJZZ.js"
+    "chunk-VJWGEPT5": {
+      "file": "chunk-VJWGEPT5.js"
     },
     "chunk-L6OFPWCY": {
       "file": "chunk-L6OFPWCY.js"

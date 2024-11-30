@@ -83,11 +83,12 @@ export default {
 		
 		// 旅行规划对话
 		else if (path === '/ai/travel-chat') {
-		  const { messages } = await request.json();
-		  
-		  const systemMessage = {
-			role: 'system',
-			content: `你是个专业的旅行规划助手。请按照以下规则处理用户请求：
+		  try {
+			const { messages } = await request.json();
+			
+			const systemMessage = {
+			  role: 'system',
+			  content: `你是个专业的旅行规划助手。请按照以下规则处理用户请求：
 
 1. 分析用户的旅行需求，包括目的地、时间、预算等
 2. 生成合理的旅行路线，包含具体地点和时间安排
@@ -114,24 +115,38 @@ export default {
 - 西湖的景点较多，建议准备好相机和充电器。
 - 杭州的美食较多，建议尝试不同的特色小吃。
 `
-		  };
+			};
 
-		  const messageHistory = [systemMessage, ...messages];
+			const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
+			  messages: [systemMessage, ...messages],
+			  stream: true,
+			  max_tokens: 2000,
+			  temperature: 0.7,
+			});
 
-		  const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
-			messages: messageHistory,
-			stream: true,
-			max_tokens: 2000,
-			temperature: 0.7,
-		  });
+			// 直接返回流，不使用 TransformStream
+			return new Response(stream, {
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'text/event-stream',
+				'Cache-Control': 'no-cache',
+				'Connection': 'keep-alive'
+			  }
+			});
 
-		  // 直接返回流，与通用聊天功能相同的处理方式
-		  return new Response(stream, {
-			headers: {
-			  ...corsHeaders,
-			  'Content-Type': 'text/event-stream',
-			},
-		  });
+		  } catch (error) {
+			console.error('处理旅行聊天请求时出错:', error);
+			return new Response(JSON.stringify({ 
+			  error: '处理请求失败',
+			  message: error.message
+			}), {
+			  status: 500,
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			});
+		  }
 		}
 
 		// 图片生成功能
@@ -162,7 +177,7 @@ export default {
 		  });
 		}
 
-		// 旅行计划管理相��的路由
+		// 旅行计划管理相的路由
 		else if (path === '/ai/travel-plans' && request.method === 'GET') {
 		  if (!env.TRAVEL_PLANS) {
 			return new Response(JSON.stringify({ error: '未配置 KV 存储' }), {
