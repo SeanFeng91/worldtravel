@@ -171,6 +171,12 @@ export default defineConfig({
       rel: 'stylesheet', 
       href: 'https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css',
       crossorigin: 'anonymous'
+    }],
+    ['meta', { name: 'mobile-web-app-capable', content: 'yes' }],
+    ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
+    ['link', { 
+      rel: 'stylesheet',
+      href: 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css'
     }]
   ],
   

@@ -1,55 +1,55 @@
 {
-  "hash": "56d38f7a",
-  "configHash": "c5ae401f",
+  "hash": "184d5cd8",
+  "configHash": "53104f50",
   "lockfileHash": "55622a7f",
-  "browserHash": "818f0e64",
+  "browserHash": "cb261a10",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "44e04e84",
+      "fileHash": "820d390d",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "20dab0cd",
+      "fileHash": "3d3808c7",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "4628594e",
+      "fileHash": "b9de75f5",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "030bb3f3",
+      "fileHash": "6b37be65",
+      "needsInterop": true
+    },
+    "mapbox-gl": {
+      "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
+      "file": "mapbox-gl.js",
+      "fileHash": "967cd7a6",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "a6fb890f",
+      "fileHash": "c724989a",
       "needsInterop": false
     },
     "marked": {
       "src": "../../../node_modules/marked/lib/marked.esm.js",
       "file": "marked.js",
-      "fileHash": "1beeff96",
+      "fileHash": "44512c08",
       "needsInterop": false
-    },
-    "mapbox-gl": {
-      "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
-      "file": "mapbox-gl.js",
-      "fileHash": "cb47ca3f",
-      "needsInterop": true
     }
   },
   "chunks": {
-    "chunk-VJWGEPT5": {
-      "file": "chunk-VJWGEPT5.js"
+    "chunk-THPMFJZZ": {
+      "file": "chunk-THPMFJZZ.js"
     },
     "chunk-L6OFPWCY": {
       "file": "chunk-L6OFPWCY.js"

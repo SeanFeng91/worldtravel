@@ -1,7 +1,7 @@
 <template>
   <div class="travel-planner">
     <div class="layout">
-      <!-- 左侧聊天区域 -->
+      <!-- 聊天区域 -->
       <div class="chat-section">
         <div class="chat-messages" ref="chatContainer">
           <div v-for="(msg, index) in messages" :key="index" 
@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <!-- 右侧地图和计划展示区域 -->
+      <!-- 地图和计划展示区域 -->
       <div class="map-section">
         <TravelMap 
           :travel-plan="currentPlan"
@@ -76,6 +76,7 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import TravelMap from './TravelMap.vue'
 import { useData } from 'vitepress'
 import { marked } from 'marked'
+import mapboxgl from 'mapbox-gl';
 
 const API_BASE = import.meta.env.VITE_WORKER_URL
 const API_KEY = import.meta.env.VITE_API_KEY
@@ -87,6 +88,7 @@ const currentPlan = ref(null)
 const savedPlans = ref([])
 const chatContainer = ref(null)
 const currentMessage = ref('')
+const map = ref(null);
 
 const handleStreamResponse = async (response, onUpdate) => {
   const reader = response.body.getReader();
@@ -176,54 +178,16 @@ const sendMessage = async () => {
       body: JSON.stringify({ messages: messages.value })
     });
 
-    if (!response.ok) {
-      throw new Error(`请求失败: ${response.status}`);
+    const data = await response.json();
+    
+    // 更新地图显示
+    if (data.geoJSON) {
+      updateMap(data.geoJSON);
     }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            if (line.includes('[DONE]')) continue;
-            
-            const data = JSON.parse(line.slice(6));
-            if (data.response !== undefined) {
-              // 处理文本
-              buffer += data.response;
-              
-              // 处理连续换行和句子结束后的换行
-              const processedText = buffer
-                .replace(/([。！？.!?])\n+/g, '$1\n') // 句子结束后最多一个换行
-                .replace(/\n{3,}/g, '\n\n') // 多个连续换行替换为两个
-                .replace(/([：])\n+/g, '$1') // 冒号后不换行
-                .replace(/^([•\-])/gm, '\n$1'); // 列表项前添加换行
-              
-              assistantMessage.content = processedText;
-              messages.value = [...messages.value];
-              
-              // 滚动到底部
-              await nextTick();
-              if (chatContainer.value) {
-                chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-              }
-            }
-          } catch (e) {
-            console.error('解析数据失败:', e);
-          }
-        }
-      }
-    }
-
+    
+    // 更新当前计划
+    currentPlan.value = data.plan;
+    
   } catch (error) {
     console.error('发送消息失败:', error);
     messages.value.push({
@@ -412,6 +376,72 @@ const handleMessage = async (content) => {
       mapRef.value.updateMarkers(parsedItinerary.locations);
     }
   }
+};
+
+// 初始化地图
+onMounted(() => {
+  mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+  
+  map.value = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    center: [0, 0],
+    zoom: 2
+  });
+});
+
+// 添加更新地图的函数
+const updateMap = (geoJSON) => {
+  if (!map.value) return;
+  
+  // 清除现有图层
+  if (map.value.getLayer('route')) map.value.removeLayer('route');
+  if (map.value.getLayer('points')) map.value.removeLayer('points');
+  if (map.value.getSource('travel-data')) map.value.removeSource('travel-data');
+  
+  // 添加新的数据源
+  map.value.addSource('travel-data', {
+    type: 'geojson',
+    data: geoJSON
+  });
+  
+  // 添加路线图层
+  map.value.addLayer({
+    id: 'route',
+    type: 'line',
+    source: 'travel-data',
+    filter: ['==', ['get', 'type'], 'route'],
+    paint: {
+      'line-color': '#0080ff',
+      'line-width': 3
+    }
+  });
+  
+  // 添加地点标记图层
+  map.value.addLayer({
+    id: 'points',
+    type: 'symbol',
+    source: 'travel-data',
+    filter: ['!has', 'type'],
+    layout: {
+      'icon-image': 'marker-15',
+      'text-field': ['concat', ['get', 'order'], '. ', ['get', 'name']],
+      'text-offset': [0, 1.5],
+      'text-anchor': 'top'
+    }
+  });
+  
+  // 调整地图视野以显示所有标记
+  const bounds = new mapboxgl.LngLatBounds();
+  geoJSON.features.forEach(feature => {
+    if (feature.geometry.type === 'Point') {
+      bounds.extend(feature.geometry.coordinates);
+    }
+  });
+  
+  map.value.fitBounds(bounds, {
+    padding: 50
+  });
 };
 </script>
 

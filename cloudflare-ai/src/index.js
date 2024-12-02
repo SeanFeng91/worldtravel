@@ -17,7 +17,8 @@ export default {
 	  const corsHeaders = {
 		'Access-Control-Allow-Origin': '*',
 		'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-		'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
+		'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, Accept, Cache-Control, Connection, cache-control, Cache-Control, Content-Type, X-Requested-With',
+		'Access-Control-Expose-Headers': 'Content-Length, Content-Type, X-Content-Type-Options',
 		'Access-Control-Max-Age': '86400',
 	  };
   
@@ -31,6 +32,7 @@ export default {
 	  // 处理 CORS 预检请求
 	  if (request.method === 'OPTIONS') {
 		return new Response(null, {
+		  status: 204,
 		  headers: {
 			...corsHeaders,
 			'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
@@ -93,38 +95,43 @@ export default {
 1. 分析用户的旅行需求，包括目的地、时间、预算等
 2. 生成合理的旅行路线，包含具体地点和时间安排
 3. 所有回复必须使用中文
-4. 回复参照以下格式，仅参考格式：
+4. 回复必须严格按照以下格式：
 
-**行程总览**: 两天一夜的杭州之行，探索西湖的美丽风光，体验杭州的传统文化和美食。
+行程总览: [简要描述整体行程]
 
-**第1天**
-- **上午**: 西湖（9:00-11:00）
-  - **描述**: 漫步西湖的湖边，欣赏美丽的湖光山色
-  - **交通**: 公共汽车或出租车
-  - **费用**: 免费
+第1天:
+上午: [地点名称]（09:00-12:00）
+- 描述: [具体活动]
+- 交通: [如何到达]
+- 费用: [预计费用]
 
-- **下午**: 岳王庙（12:00-14:00）
-  - **描述**: 参观岳飞的纪念堂，了解南宋历史
-  - **交通**: 步行
-  - **费用**: 免费
+中午: [地点名称]（12:00-14:00）
+...
 
-**总预算估算**: 500-800元
+第2天:
+...
 
-**旅行建议**:
-- 杭州的天气较为湿润，请携带雨具。
-- 西湖的景点较多，建议准备好相机和充电器。
-- 杭州的美食较多，建议尝试不同的特色小吃。
-`
+总预算估算: [预算范围]
+
+旅行建议:
+- [建议1]
+- [建议2]
+...`
 			};
 
+			const messageHistory = [
+			  systemMessage,
+			  ...messages
+			];
+
 			const stream = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
-			  messages: [systemMessage, ...messages],
+			  messages: messageHistory,
 			  stream: true,
 			  max_tokens: 2000,
 			  temperature: 0.7,
 			});
 
-			// 直接返回流，不使用 TransformStream
+			// 返回流式响应
 			return new Response(stream, {
 			  headers: {
 				...corsHeaders,
@@ -138,7 +145,8 @@ export default {
 			console.error('处理旅行聊天请求时出错:', error);
 			return new Response(JSON.stringify({ 
 			  error: '处理请求失败',
-			  message: error.message
+			  message: error.message,
+			  stack: error.stack
 			}), {
 			  status: 500,
 			  headers: {
@@ -212,7 +220,7 @@ export default {
 		console.error('处理请求时出错:', error);
 		return new Response(JSON.stringify({ 
 		  error: error.message,
-		  details: error.stack
+		  stack: error.stack
 		}), {
 		  status: 500,
 		  headers: {
