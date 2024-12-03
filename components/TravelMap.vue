@@ -27,6 +27,22 @@ const map = ref(null);
 const markers = ref([]);
 const mapContainer = ref(null);
 
+// 定义每天使用的颜色
+const dayColors = [
+  '#FF0000', // 红色
+  '#00FF00', // 绿色
+  '#0000FF', // 蓝色
+  '#FFA500', // 橙色
+  '#800080', // 紫色
+  '#008080', // 青色
+  '#FFD700'  // 金色
+];
+
+// 获取某天的颜色
+const getDayColor = (dayNumber) => {
+  return dayColors[(dayNumber - 1) % dayColors.length];
+};
+
 // 从行程内容中提取城市名
 const extractCityName = (plan) => {
   if (!plan || !plan.overview) return '';
@@ -163,7 +179,7 @@ const addMarker = (coordinates, { title, description }) => {
       marker.addTo(map.value);
       console.log('标记已添加到地图:', coordinates);
     } else {
-      console.error('地图实例未找到');
+      console.error('地图实例未���到');
     }
 
     return marker;
@@ -171,12 +187,6 @@ const addMarker = (coordinates, { title, description }) => {
     console.error('创建标记失败:', error);
     return null;
   }
-};
-
-// 清除所有标记
-const clearMarkers = () => {
-  markers.value.forEach(marker => marker.remove());
-  markers.value = [];
 };
 
 // 监听行程数据变化
@@ -188,38 +198,86 @@ watch(() => props.travelPlan, async (newPlan) => {
   const bounds = new mapboxgl.LngLatBounds();
   let hasValidLocation = false;
 
-  // 提取城市名
-  const cityName = extractCityName(newPlan);
-  console.log('提取的城市名:', cityName);
-
   // 处理每天的地点
   for (const day of newPlan.days) {
+    const dayColor = getDayColor(day.day);
+    const dayCoordinates = []; // 存储当天的所有坐标点
+
     for (const location of day.locations) {
       try {
-        const coordinates = await getCoordinates(location.name, cityName);
+        const coordinates = await getCoordinates(location.name);
         if (coordinates) {
           hasValidLocation = true;
           console.log(`添加标记: ${location.name}`, coordinates);
           
-          const marker = addMarker(coordinates, {
-            title: location.name,
-            description: `第${day.day}天 ${location.period} ${location.arrival_time}-${location.departure_time}`
-          });
-          
-          if (marker) {
-            markers.value.push(marker);
-            bounds.extend(coordinates);
-          }
+          // 使用带颜色的标记
+          const marker = new mapboxgl.Marker({
+            color: dayColor
+          })
+            .setLngLat(coordinates)
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 })
+                .setHTML(`
+                  <div class="popup-content">
+                    <h3>${location.name}</h3>
+                    <p>第${day.day}天 ${location.period} ${location.arrival_time}-${location.departure_time}</p>
+                  </div>
+                `)
+            )
+            .addTo(map.value);
+
+          markers.value.push(marker);
+          bounds.extend(coordinates);
+          dayCoordinates.push(coordinates);
         }
       } catch (error) {
         console.error(`处理地点失败: ${location.name}`, error);
       }
     }
+
+    // 如果当天有多个地点，添加路径
+    if (dayCoordinates.length > 1) {
+      // 添加路径线
+      const routeId = `route-day-${day.day}`;
+      
+      // 如果已存在相同ID的路径，先移除
+      if (map.value.getSource(routeId)) {
+        map.value.removeLayer(routeId);
+        map.value.removeSource(routeId);
+      }
+
+      map.value.addSource(routeId, {
+        'type': 'geojson',
+        'data': {
+          'type': 'Feature',
+          'properties': {},
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': dayCoordinates
+          }
+        }
+      });
+
+      map.value.addLayer({
+        'id': routeId,
+        'type': 'line',
+        'source': routeId,
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': dayColor,
+          'line-width': 2,
+          'line-opacity': 0.8,
+          'line-dasharray': [2, 2] // 虚线效果
+        }
+      });
+    }
   }
 
   // 调整地图视角
   if (hasValidLocation && markers.value.length > 0) {
-    console.log('调整地图视角到标记范围');
     map.value.fitBounds(bounds, {
       padding: { top: 50, bottom: 50, left: 50, right: 50 },
       duration: 1000,
@@ -227,6 +285,39 @@ watch(() => props.travelPlan, async (newPlan) => {
     });
   }
 });
+
+// 清除所有标记和路径
+const clearMarkers = () => {
+  // 清除标记
+  markers.value.forEach(marker => marker.remove());
+  markers.value = [];
+
+  // 清除路径
+  if (map.value) {
+    map.value.getStyle().layers.forEach(layer => {
+      if (layer.id.startsWith('route-day-')) {
+        map.value.removeLayer(layer.id);
+        map.value.removeSource(layer.id);
+      }
+    });
+  }
+};
+
+// 创建标记元素
+const createMarkerElement = () => {
+  const el = document.createElement('div');
+  el.className = 'custom-marker';
+  
+  const dot = document.createElement('div');
+  dot.className = 'marker-dot';
+  el.appendChild(dot);
+
+  const pulse = document.createElement('div');
+  pulse.className = 'marker-pulse';
+  el.appendChild(pulse);
+
+  return el;
+};
 
 // 初始化地图
 onMounted(() => {
@@ -285,65 +376,8 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-.custom-marker {
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
-  position: relative;
-}
-
-.marker-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  background-color: var(--vp-c-brand);
-  border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
-}
-
-.custom-marker::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 30px;
-  height: 30px;
-  background-color: var(--vp-c-brand);
-  border-radius: 50%;
-  opacity: 0.2;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 0.5;
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 0;
-  }
-}
-
-/* 弹窗样式 */
-:deep(.mapboxgl-popup-content) {
+.popup-content {
   padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: none;
-}
-
-:deep(.mapboxgl-popup-tip) {
-  display: none;
 }
 
 .popup-content h3 {
@@ -354,26 +388,68 @@ onMounted(() => {
 }
 
 .popup-content p {
-  margin: 0;
+  margin: 4px 0;
   font-size: 12px;
   color: var(--vp-c-text-2);
 }
 
-/* 暗色主题适配 */
-:deep(.dark) .popup-content {
-  background: var(--vp-c-bg);
-}
-
-:deep(.dark) .marker-dot {
-  border-color: var(--vp-c-bg);
-}
-
-.coordinates {
-  font-size: 12px;
-  color: var(--vp-c-text-3);
-  border-top: 1px solid var(--vp-c-divider);
-  padding-top: 8px;
+.popup-content .description {
+  font-style: italic;
   margin-top: 8px;
+}
+
+.popup-content .transport,
+.popup-content .cost {
+  color: var(--vp-c-text-3);
+}
+
+.custom-marker {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  cursor: pointer;
+}
+
+.marker-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: var(--vp-c-brand);
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.marker-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background-color: var(--vp-c-brand);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.3;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
 }
 
 .loading-overlay {

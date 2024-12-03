@@ -142,8 +142,8 @@ const parseTravelPlan = (content) => {
   try {
     console.log('开始解析行程内容:', content);
 
-    // 提取行程总览 - 使用更灵活的匹配模式
-    const planMatch = content.match(/(?:行程总览|行程概览|总览|概览)[：:\n\s]*([\s\S]*?)(?=第[一二三四五六七八九十\d]+天|$)/);
+    // 提取行程总览
+    const planMatch = content.match(/\*\*行程总览\*\*:\s*(.*?)(?=\n\n\*\*第|$)/);
     console.log('行程总览匹配结果:', planMatch);
     
     if (!planMatch) {
@@ -154,8 +154,8 @@ const parseTravelPlan = (content) => {
     const overview = planMatch[1].trim();
     console.log('提取的行程总览:', overview);
     
-    // 提取每天的行程 - 支持中文数字和阿拉伯数字
-    const daysPattern = /第([一二三四五六七八九十\d]+)天[：:\n\s]*([\s\S]*?)(?=第[一二三四五六七八九十\d]+天|$)/g;
+    // 提取每天的行程
+    const daysPattern = /\*\*第(\d+)天\*\*\n([\s\S]*?)(?=\*\*第\d+天\*\*|\*\*总预算估算|$)/g;
     const days = [];
     let locations = [];
     
@@ -163,31 +163,39 @@ const parseTravelPlan = (content) => {
     let daysFound = 0;
     while ((match = daysPattern.exec(content)) !== null) {
       daysFound++;
-      // 将中文数字转换为阿拉伯数字
-      const dayNumber = parseInt(match[1].replace(/[一二三四五六七八九十]/g, (s) => {
-        const map = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
-        return map[s] || s;
-      }));
+      const dayNumber = parseInt(match[1]);
       const dayContent = match[2];
       
       console.log(`解析第${dayNumber}天的内容:`, dayContent);
       
-      // 提取地点和时间 - 更灵活的匹配模式
-      const locationPattern = /([上中下]午|早上|晚上|夜间)[：:\s]*([^（(]*)[（(]?(\d{1,2}[:：]\d{2})?[-~至]?(\d{1,2}[:：]\d{2})?[）)]?/g;
+      // 提取地点和时间
+      const locationPattern = /\*\*([上中下]午|早上|晚上|夜间)\*\*:\s*([^（(]+)[（(](\d{1,2}:\d{2})-(\d{1,2}:\d{2})[）)]/g;
       const dayLocations = [];
       
       let locMatch;
       let locationsFound = 0;
       while ((locMatch = locationPattern.exec(dayContent)) !== null) {
         locationsFound++;
+        const locationName = locMatch[2].trim();
+        
+        // 提取描述、交通和费用信息
+        const descPattern = new RegExp(`\\*\\*描述\\*\\*:\\s*([^\\n]+)`, 'i');
+        const transportPattern = new RegExp(`\\*\\*交通\\*\\*:\\s*([^\\n]+)`, 'i');
+        const costPattern = new RegExp(`\\*\\*费用\\*\\*:\\s*([^\\n]+)`, 'i');
+        
+        const locationBlock = dayContent.split('-').find(block => block.includes(locationName));
+        
         const location = {
           period: locMatch[1],
-          name: locMatch[2].trim(),
-          arrival_time: locMatch[3]?.replace('：', ':') || '',
-          departure_time: locMatch[4]?.replace('：', ':') || ''
+          name: locationName,
+          arrival_time: locMatch[3],
+          departure_time: locMatch[4],
+          description: locationBlock?.match(descPattern)?.[1]?.trim() || '',
+          transport: locationBlock?.match(transportPattern)?.[1]?.trim() || '',
+          cost: locationBlock?.match(costPattern)?.[1]?.trim() || ''
         };
-        console.log(`找到地点:`, location);
         
+        console.log(`找到地点:`, location);
         dayLocations.push(location);
         locations.push({
           ...location,
@@ -210,10 +218,16 @@ const parseTravelPlan = (content) => {
       return null;
     }
 
+    // 提取总预算和旅行建议
+    const budgetMatch = content.match(/\*\*总预算估算\*\*:\s*(.*?)(?=\n|$)/);
+    const tipsMatch = content.match(/\*\*旅行建议\*\*:\n([\s\S]*?)$/);
+
     const plan = {
       overview,
       days,
-      locations
+      locations,
+      budget: budgetMatch ? budgetMatch[1].trim() : '',
+      tips: tipsMatch ? tipsMatch[1].split('\n').map(tip => tip.replace(/^-\s*/, '').trim()).filter(Boolean) : []
     };
     
     console.log('解析完成的行程计划:', plan);
