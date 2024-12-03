@@ -7,6 +7,7 @@ import { ref, onMounted } from 'vue'
 import TravelChat from '../components/TravelChat.vue'
 import TravelMap from '../components/TravelMap.vue'
 import TravelPlan from '../components/TravelPlan.vue'
+import AMapTest from '../components/AMapTest.vue'
 
 const currentPlan = ref(null)
 const isLoading = ref(false)
@@ -22,6 +23,7 @@ const handleDayFocus = (day) => {
 </script>
 
 # 旅行规划助手
+
 
 <div class="travel-container">
   <!-- 聊天区域 -->
@@ -44,6 +46,12 @@ const handleDayFocus = (day) => {
       @dayFocused="handleDayFocus"
     />
   </div>
+
+输入提示和POI搜索插件结合使用
+
+  <div class="section">
+    <AMapTest />
+  </div>
 </div>
 
 <style>
@@ -52,8 +60,8 @@ const handleDayFocus = (day) => {
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  margin: -24px;
-  background-color: var(--vp-c-bg-soft);
+  margin: 0px;
+  /* background-color: var(--vp-c-bg-soft); */
 }
 
 .section {

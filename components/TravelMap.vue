@@ -69,70 +69,87 @@ const extractCityName = (plan) => {
 // 获取地理坐标
 const getCoordinates = async (locationName, cityName = '') => {
   try {
-    // 构建搜索查询
-    let searchQuery = locationName;
-    if (cityName && !locationName.includes(cityName)) {
-      searchQuery = `${cityName}${locationName}`;
-    }
+    // 判断是否是国外地点
+    const isOverseas = /[a-zA-Z]/.test(locationName) || 
+                      ['美国', '英国', '法国', '德国', '意大利', '日本'].some(country => 
+                        locationName.includes(country) || (cityName && cityName.includes(country))
+                      );
 
-    console.log('搜索地点:', searchQuery);
-
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?` + 
-      `q=${encodeURIComponent(searchQuery)}&` +
-      `format=json&` +
-      `limit=1&` +
-      `countrycodes=cn&` + // 限制在中国范围内搜索
-      `accept-language=zh-CN`
-    );
+    let coordinates = null;
     
-    if (!response.ok) {
-      throw new Error(`Geocoding API error: ${response.status}`);
+    // 国内地点优先使用高德地图
+    if (!isOverseas) {
+      const AMAP_KEY = import.meta.env.VITE_AMAP_KEY;
+      if (AMAP_KEY) {
+        try {
+          const searchQuery = cityName ? `${cityName}${locationName}` : locationName;
+          const amapResponse = await fetch(
+            `https://restapi.amap.com/v3/place/text?` +
+            `key=${AMAP_KEY}&` +
+            `keywords=${encodeURIComponent(searchQuery)}&` +
+            `city=${encodeURIComponent(cityName || 'all')}&` +
+            `citylimit=true&` +
+            `output=json&` +
+            `offset=1&` +
+            `page=1&` +
+            `extensions=base`
+          );
+
+          if (amapResponse.ok) {
+            const amapData = await amapResponse.json();
+            console.log('高德地图搜索结果:', amapData);
+
+            if (amapData.status === '1' && amapData.pois && amapData.pois.length > 0) {
+              const [lng, lat] = amapData.pois[0].location.split(',');
+              coordinates = [parseFloat(lng), parseFloat(lat)];
+              console.log(`高德地图找到坐标: [${coordinates}] for ${searchQuery}`);
+            }
+          }
+        } catch (error) {
+          console.error('高德地图搜索失败:', error);
+        }
+      }
     }
 
-    const data = await response.json();
-    console.log('OSM地点查询结果:', {
-      query: searchQuery,
-      result: data
-    });
-
-    if (data && data.length > 0) {
-      const coordinates = [parseFloat(data[0].lon), parseFloat(data[0].lat)];
-      console.log(`找到坐标 [${coordinates}] for ${searchQuery}`);
-      return coordinates;
-    }
-
-    // 如果没找到，尝试直接搜索地点名
-    if (searchQuery !== locationName) {
-      console.log('尝试直接搜索地点名:', locationName);
-      const fallbackResponse = await fetch(
+    // 如果高德地图未找到结果或是国外地点，使用 OSM
+    if (!coordinates) {
+      console.log(`使用 OSM 搜索${isOverseas ? '国外' : '备选'}地点`);
+      const searchQuery = cityName ? `${cityName} ${locationName}` : locationName;
+      
+      const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` + 
-        `q=${encodeURIComponent(locationName)}&` +
+        `q=${encodeURIComponent(searchQuery)}&` +
         `format=json&` +
         `limit=1&` +
-        `countrycodes=cn&` +
-        `accept-language=zh-CN`
+        `accept-language=${isOverseas ? 'en' : 'zh-CN'}&` +
+        (isOverseas ? '' : 'countrycodes=cn&')
       );
 
-      if (!fallbackResponse.ok) {
-        throw new Error(`Fallback geocoding API error: ${fallbackResponse.status}`);
+      if (!response.ok) {
+        throw new Error(`OSM Geocoding error: ${response.status}`);
       }
 
-      const fallbackData = await fallbackResponse.json();
-      console.log('OSM备用查询结果:', {
-        query: locationName,
-        result: fallbackData
+      const data = await response.json();
+      console.log('OSM搜索结果:', {
+        query: searchQuery,
+        result: data
       });
 
-      if (fallbackData && fallbackData.length > 0) {
-        const coordinates = [parseFloat(fallbackData[0].lon), parseFloat(fallbackData[0].lat)];
-        console.log(`找到备用坐标 [${coordinates}] for ${locationName}`);
-        return coordinates;
+      if (data && data.length > 0) {
+        coordinates = [parseFloat(data[0].lon), parseFloat(data[0].lat)];
+        console.log(`OSM找到坐标: [${coordinates}] for ${searchQuery}`);
+      } else if (cityName) {
+        // 如果带城市名搜索失败，尝试只用地点名
+        return await getCoordinates(locationName);
       }
     }
 
-    console.warn(`未找到地点坐标: ${searchQuery}`);
-    return null;
+    if (!coordinates) {
+      console.warn(`未找到地点坐标: ${locationName}`);
+      return null;
+    }
+
+    return coordinates;
   } catch (error) {
     console.error('获取坐标失败:', locationName, error);
     return null;
@@ -179,7 +196,7 @@ const addMarker = (coordinates, { title, description }) => {
       marker.addTo(map.value);
       console.log('标记已添加到地图:', coordinates);
     } else {
-      console.error('地图实例未���到');
+      console.error('地图实例未到');
     }
 
     return marker;

@@ -219,6 +219,15 @@ export default defineConfig({
           }
         }
       }
-    ]
+    ],
+    server: {
+      proxy: {
+        '/_AMapService': {
+          target: 'https://lbs.amap.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/_AMapService/, '/AMapService')
+        }
+      }
+    }
   }
 })
