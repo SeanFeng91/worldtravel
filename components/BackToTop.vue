@@ -43,10 +43,10 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top {
   position: fixed;
-  right: 2rem;
-  bottom: 6rem;
-  width: 40px;
-  height: 40px;
+  right: 20px;
+  bottom: 160px;
+  width:60px;
+  height: 60px;
   border-radius: 50%;
   background-color: var(--vp-c-brand);
   color: white;

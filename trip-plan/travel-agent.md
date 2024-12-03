@@ -47,11 +47,8 @@ const handleDayFocus = (day) => {
     />
   </div>
 
-输入提示和POI搜索插件结合使用
-
-  <div class="section">
-    <AMapTest />
-  </div>
+  <!-- 浮动地图控件 -->
+  <!-- <AMapTest /> -->
 </div>
 
 <style>
