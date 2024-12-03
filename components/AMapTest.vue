@@ -6,32 +6,62 @@
     </button>
 
     <div class="map-container" v-show="isExpanded">
-      <div class="search-container">
+      <!-- 搜索和结果面板 -->
+      <div class="panel-container">
+        <!-- 天气信息 -->
+        <div class="weather-info" v-if="weatherInfo">
+          <div class="weather-brief">
+            <span class="city">{{ weatherInfo.city }}</span>
+            <span class="temp">{{ weatherInfo.temperature }}℃</span>
+            <span class="weather">{{ weatherInfo.weather }}</span>
+          </div>
+          <div class="weather-detail">
+            <span>{{ weatherInfo.windDirection }}风 {{ weatherInfo.windPower }}级</span>
+            <span>湿度 {{ weatherInfo.humidity }}%</span>
+          </div>
+          <div class="report-time">{{ weatherInfo.reportTime }}</div>
+        </div>
+
         <div class="search-box">
           <input 
             type="text" 
             id="keyword" 
             v-model="keyword"
-            placeholder="请输入关键字：(选定后搜索)"
-            @focus="keyword = ''"
+            placeholder="输入关键字搜索"
+            @keyup.enter="handleSearch"
           />
         </div>
-      </div>
-
-      <div class="weather-container" v-if="weatherInfo">
-        <div class="weather-panel">
-          <div class="weather-brief">
-            <span>{{ weatherInfo.city }}</span>
-            <span>{{ weatherInfo.weather }} {{ weatherInfo.temperature }}℃</span>
-            <span>{{ weatherInfo.windDirection }}风 {{ weatherInfo.windPower }}级</span>
-          </div>
-          <div class="weather-detail">
-            <p>湿度：{{ weatherInfo.humidity }}%</p>
-            <p class="report-time">{{ weatherInfo.reportTime }}</p>
-          </div>
+        <div class="result-panel scrollbar1">
+          <!-- 分页器 -->
+          <ul class="pagination-sm">
+            <li v-if="currentPage > 1" @click="goPage(1)">首页</li>
+            <li v-if="currentPage < totalPages" @click="goPage(currentPage + 1)">下一页</li>
+          </ul>
+          <!-- 结果列表 -->
+          <ul class="poi-list">
+            <li v-for="(item, index) in searchResults" 
+                :key="item.id"
+                class="poibox"
+                :class="{ selected: selectedId === item.id }"
+                @click="jumpToMarker(index)"
+                @mouseenter="handlePoiHover(item, index, true)"
+                @mouseleave="handlePoiHover(item, index, false)">
+              <div v-if="item.photos && item.photos[0]" class="poi-imgbox">
+                <span class="poi-img" :style="{ backgroundImage: `url(${item.photos[0].url})` }"></span>
+              </div>
+              <div class="poi-info-left">
+                <h3 class="poi-title">{{ index + 1 }}. {{ item.name }}</h3>
+                <div class="poi-info">
+                  <p class="poi-addr">地址：{{ item.address }}</p>
+                  <p v-if="item.tel" class="poi-addr">电话：{{ item.tel }}</p>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
 
+      <!-- 地图容器 -->
       <div id="mapContainer" class="map"></div>
     </div>
   </div>
@@ -47,6 +77,11 @@ let autocomplete = null;
 let placeSearch = null;
 let weather = null;
 const isExpanded = ref(false);
+const searchResults = ref([]);
+const currentPage = ref(1);
+const totalPages = ref(0);
+const selectedId = ref(null);
+const markers = ref([]);
 
 // 加载安全配置脚本
 const loadSecurityScript = () => {
@@ -213,6 +248,136 @@ onMounted(async () => {
     console.error('加载地图脚本失败:', error);
   }
 });
+
+// 处理搜索
+const handleSearch = () => {
+  if (!keyword.value) return;
+  currentPage.value = 1;
+  goPage(1);
+};
+
+// 跳转到指定页
+const goPage = (page) => {
+  if (!placeSearch) return;
+  
+  placeSearch.setPageIndex(page);
+  placeSearch.search(keyword.value, async (status, result) => {
+    if (status === 'complete') {
+      searchResults.value = result.poiList.pois;
+      totalPages.value = Math.ceil(result.poiList.count / result.poiList.pageSize);
+      currentPage.value = page;
+      
+      // 更新地图标记
+      updateMarkers(result.poiList.pois);
+
+      // 查询第一个地点的天气
+      if (result.poiList.pois.length > 0) {
+        const firstPoi = result.poiList.pois[0];
+        try {
+          const weatherData = await queryWeather(firstPoi.cityname || firstPoi.adname);
+          weatherInfo.value = weatherData;
+        } catch (error) {
+          console.error('获取天气信息失败:', error);
+        }
+      }
+    }
+  });
+};
+
+// 更新地图标记
+const updateMarkers = (pois) => {
+  // 清除旧标记
+  markers.value.forEach(marker => marker.remove());
+  markers.value = [];
+  
+  // 添加新标记
+  pois.forEach((poi, index) => {
+    const marker = new window.AMap.SimpleMarker({
+      map: map,
+      position: poi.location,
+      iconTheme: 'numv1',
+      iconStyle: `red-${index + 1}`,
+      containerClassNames: 'my-marker'
+    });
+    
+    markers.value.push(marker);
+  });
+  
+  // 调整视野
+  map.setFitView(markers.value);
+};
+
+// 选择 POI
+const selectPoi = (poi, index) => {
+  selectedId.value = poi.id;
+  
+  // 更新标记样式
+  markers.value[index].setIconStyle(`blue-${index + 1}`);
+  
+  // 获取标记位置
+  const position = poi.location;
+  
+  // 平滑移动到标记位置
+  map.value.setZoomAndCenter(15, position, true, {
+    duration: 800,
+    easing: 'easeInOutCubic'
+  });
+  
+  // 打开信息窗体
+  const infoWindow = new window.AMap.SimpleInfoWindow({
+    offset: new window.AMap.Pixel(0, -32),
+    infoTitle: poi.name,
+    infoBody: poi.address
+  });
+  
+  infoWindow.open(map.value, position);
+};
+
+// 处理悬停效果
+const handlePoiHover = (poi, index, isEnter) => {
+  if (selectedId.value === poi.id) return;
+  
+  const marker = markers.value[index];
+  if (marker) {
+    marker.setIconStyle(isEnter ? `blue-${index + 1}` : `red-${index + 1}`);
+    
+    // 悬停时也显示信息窗体
+    if (isEnter) {
+      const infoWindow = new window.AMap.SimpleInfoWindow({
+        offset: new window.AMap.Pixel(0, -32),
+        infoTitle: poi.name,
+        infoBody: poi.address
+      });
+      infoWindow.open(map.value, poi.location);
+    }
+  }
+};
+
+// 添加跳转到指定标记的方法
+const jumpToMarker = async (index) => {
+  if (!map.value || !markers.value[index]) return;
+  
+  const marker = markers.value[index];
+  const position = marker.getPosition();
+  const poi = searchResults.value[index];
+  
+  // 平滑移动到标记位置
+  map.value.setZoomAndCenter(15, position, true, {
+    duration: 800,
+    easing: 'easeInOutCubic'
+  });
+  
+  // 触发标记的点击事件
+  marker.emit('click');
+
+  // 查询天气
+  try {
+    const weatherData = await queryWeather(poi.cityname || poi.adname);
+    weatherInfo.value = weatherData;
+  } catch (error) {
+    console.error('获取天气信息失败:', error);
+  }
+};
 </script>
 
 <style scoped>
@@ -373,5 +538,202 @@ onMounted(async () => {
   .weather-brief {
     justify-content: space-between;
   }
+}
+
+.panel-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-box {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.result-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pagination-sm {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  list-style: none;
+  margin: 0;
+}
+
+.pagination-sm li {
+  padding: 4px 12px;
+  margin: 0 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-sm li:hover {
+  background: var(--vp-c-brand);
+  color: white;
+  border-color: var(--vp-c-brand);
+}
+
+.poi-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.poibox {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.poibox:hover,
+.poibox.selected {
+  background: rgba(var(--vp-c-brand-rgb), 0.1);
+}
+
+.poi-imgbox {
+  float: left;
+  margin-right: 10px;
+}
+
+.poi-img {
+  display: block;
+  width: 60px;
+  height: 60px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+}
+
+.poi-info-left {
+  overflow: hidden;
+}
+
+.poi-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--vp-c-text-1);
+}
+
+.poi-addr {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--vp-c-text-2);
+}
+
+/* 暗色主题适配 */
+:deep(.dark) .panel-container {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+:deep(.dark) .search-box,
+:deep(.dark) .pagination-sm,
+:deep(.dark) .poibox {
+  border-color: var(--vp-c-divider);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .panel-container {
+    width: 100%;
+    height: 50%;
+    bottom: 0;
+    top: auto;
+  }
+}
+
+/* 添加标记动画样式 */
+.amap-marker-bounce {
+  animation-name: bounce;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* 添加平滑过渡效果 */
+.poibox {
+  /* ... 其他样式保持不变 ... */
+  transition: all 0.3s ease;
+}
+
+.poibox.selected {
+  /* ... 其他样式保持不变 ... */
+  transform: translateX(5px);
+  border-left: 3px solid var(--vp-c-brand);
+}
+
+.weather-info {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.weather-brief {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.city {
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+}
+
+.temp {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--vp-c-brand);
+}
+
+.weather {
+  color: var(--vp-c-text-2);
+}
+
+.weather-detail {
+  display: flex;
+  gap: 16px;
+  color: var(--vp-c-text-2);
+  margin-bottom: 4px;
+}
+
+.report-time {
+  font-size: 12px;
+  color: var(--vp-c-text-3);
+}
+
+/* 暗色主题适配 */
+:deep(.dark) .weather-info {
+  background: rgba(30, 30, 30, 0.9);
+  border-color: var(--vp-c-divider);
 }
 </style> 
