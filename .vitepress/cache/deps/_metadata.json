@@ -1,58 +1,73 @@
 {
-  "hash": "184d5cd8",
-  "configHash": "53104f50",
+  "hash": "adb45438",
+  "configHash": "a54aaec4",
   "lockfileHash": "55622a7f",
-  "browserHash": "cb261a10",
+  "browserHash": "8c698f2c",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "820d390d",
+      "fileHash": "74671cb7",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "3d3808c7",
+      "fileHash": "447cc3f5",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "b9de75f5",
+      "fileHash": "607b5c3a",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "6b37be65",
+      "fileHash": "d6c6cfcf",
       "needsInterop": true
+    },
+    "vitepress > @vueuse/integrations/useFocusTrap": {
+      "src": "../../../node_modules/@vueuse/integrations/useFocusTrap.mjs",
+      "file": "vitepress___@vueuse_integrations_useFocusTrap.js",
+      "fileHash": "30f997b5",
+      "needsInterop": false
+    },
+    "vitepress > mark.js/src/vanilla.js": {
+      "src": "../../../node_modules/mark.js/src/vanilla.js",
+      "file": "vitepress___mark__js_src_vanilla__js.js",
+      "fileHash": "67106307",
+      "needsInterop": false
+    },
+    "vitepress > minisearch": {
+      "src": "../../../node_modules/minisearch/dist/es/index.js",
+      "file": "vitepress___minisearch.js",
+      "fileHash": "cb13b3c2",
+      "needsInterop": false
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "967cd7a6",
+      "fileHash": "e31b4335",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "c724989a",
-      "needsInterop": false
-    },
-    "marked": {
-      "src": "../../../node_modules/marked/lib/marked.esm.js",
-      "file": "marked.js",
-      "fileHash": "44512c08",
+      "fileHash": "630b1bd3",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-423MXVGV": {
+      "file": "chunk-423MXVGV.js"
+    },
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-L6OFPWCY": {
-      "file": "chunk-L6OFPWCY.js"
+    "chunk-HKJ2B2AA": {
+      "file": "chunk-HKJ2B2AA.js"
     }
   }
 }
