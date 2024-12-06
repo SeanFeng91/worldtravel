@@ -2,60 +2,66 @@
   "hash": "adb45438",
   "configHash": "a54aaec4",
   "lockfileHash": "55622a7f",
-  "browserHash": "8c698f2c",
+  "browserHash": "b2b2e36a",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "74671cb7",
+      "fileHash": "1d1fa1c0",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "447cc3f5",
+      "fileHash": "0084dbb8",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "607b5c3a",
+      "fileHash": "b90f97c5",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "d6c6cfcf",
+      "fileHash": "9356db4b",
       "needsInterop": true
     },
     "vitepress > @vueuse/integrations/useFocusTrap": {
       "src": "../../../node_modules/@vueuse/integrations/useFocusTrap.mjs",
       "file": "vitepress___@vueuse_integrations_useFocusTrap.js",
-      "fileHash": "30f997b5",
+      "fileHash": "faf80aa1",
       "needsInterop": false
     },
     "vitepress > mark.js/src/vanilla.js": {
       "src": "../../../node_modules/mark.js/src/vanilla.js",
       "file": "vitepress___mark__js_src_vanilla__js.js",
-      "fileHash": "67106307",
+      "fileHash": "a118d561",
       "needsInterop": false
     },
     "vitepress > minisearch": {
       "src": "../../../node_modules/minisearch/dist/es/index.js",
       "file": "vitepress___minisearch.js",
-      "fileHash": "cb13b3c2",
+      "fileHash": "460f005e",
       "needsInterop": false
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "e31b4335",
+      "fileHash": "8d58a65b",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "630b1bd3",
+      "fileHash": "225dcf4d",
+      "needsInterop": false
+    },
+    "marked": {
+      "src": "../../../node_modules/marked/lib/marked.esm.js",
+      "file": "marked.js",
+      "fileHash": "725d2986",
       "needsInterop": false
     }
   },
@@ -66,8 +72,8 @@
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-HKJ2B2AA": {
-      "file": "chunk-HKJ2B2AA.js"
+    "chunk-L6OFPWCY": {
+      "file": "chunk-L6OFPWCY.js"
     }
   }
 }
