@@ -6,23 +6,27 @@ export default {
     }
   },
   mounted() {
-    // 在组件挂载后配置搜索框
     const searchBox = this.$el.querySelector('orama-search-box')
     const searchConfig = {
       resultsMap: {
-        "path": "content",
-        "title": "title",
-        "description": "content"
+        path: "path",
+        title: "title",
+        section: "section",
+        description: "section"
       },
       colorScheme: "system",
       themeConfig: {},
       index: {
-        endpoint: "https://cloud.orama.run/v1/indexes/hapaiqi-top-hvx0op",
-        api_key: "xdu6hi8ybc8jOAKR7qmFq9ltm7hpon6s",
+        endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
+        api_key: import.meta.env.VITE_ORAMA_API_KEY,
       }
     }
     
     Object.assign(searchBox, searchConfig)
+    
+    searchBox.addEventListener('load', () => {
+      console.log('Search box configured:', searchBox.resultsMap)
+    })
   },
   methods: {
     toggleSearch() {
@@ -70,6 +74,7 @@ export default {
 @media (max-width: 960px) {
   #orama-ui {
     left: 20px;
+    top: 5px;
   }
 }
 </style>
