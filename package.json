@@ -14,6 +14,10 @@
   "dependencies": {
     "@langchain/community": "^0.3.16",
     "@langchain/core": "^0.3.19",
+    "@orama/orama": "^3.0.2",
+    "@orama/vue-components": "^0.1.23",
+    "@orama/wc-components": "^0.1.23",
+    "@oramacloud/client": "^2.1.4",
     "langchain": "^0.3.6",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.8.0",
@@ -21,7 +25,6 @@
     "markdown-it-emoji": "^3.0.0",
     "marked": "^15.0.3",
     "vue": "^3.3.0"
-    
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

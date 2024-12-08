@@ -109,10 +109,9 @@ export default defineConfig({
       copyright: 'Copyright © 2024-present WorldTravel'
     },
     
-
+// 搜索配置
     search: {
-      provider: 'local',
-      
+      provider: 'orama', 
     }
   },
   
@@ -137,6 +136,18 @@ export default defineConfig({
     ['link', { 
       rel: 'stylesheet',
       href: 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css'
+    }],
+    ['link', { 
+      rel: 'stylesheet', 
+      href: 'https://cdn.jsdelivr.net/npm/@orama/wc-components@latest/dist/orama-ui/orama-ui.css' 
+    }],
+    ['script', { 
+      type: 'module', 
+      src: 'https://cdn.jsdelivr.net/npm/@orama/wc-components@latest/dist/orama-ui/orama-ui.esm.js' 
+    }],
+    ['script', { 
+      nomodule: true, 
+      src: 'https://cdn.jsdelivr.net/npm/@orama/wc-components@latest/dist/cjs/orama-ui.cjs.js' 
     }]
   ],
   
