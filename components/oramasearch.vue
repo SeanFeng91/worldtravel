@@ -1,6 +1,4 @@
 <script>
-import { OramaClient } from "@oramacloud/client";
-import { OramaSearchBox } from "@orama/vue-components";
 
 const customConfiguration = {
   "resultsMap": {
