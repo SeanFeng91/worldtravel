@@ -93,7 +93,8 @@ export default defineConfig({
             { text: '预算计算器', link: '/tools/budget-calculator' },
             { text: '行程规划', link: '/tools/itinerary-planner' },
             { text: '签证追踪', link: '/tools/visa-tracker' },
-            { text: '路线优化', link: '/tools/route-optimizer' }
+            { text: '路线优化', link: '/tools/route-optimizer' },
+            { text: '已经去过的', link: '/tools/visitplace' }
           ]
         }
       ]

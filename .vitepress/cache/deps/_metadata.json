@@ -1,64 +1,58 @@
 {
-  "hash": "481454d1",
+  "hash": "6543e98c",
   "configHash": "53104f50",
-  "lockfileHash": "78aca75c",
-  "browserHash": "15d00cc2",
+  "lockfileHash": "b86e732f",
+  "browserHash": "3bf27a1d",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "e99bf439",
+      "fileHash": "71242dd9",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "12344151",
+      "fileHash": "78a018ea",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "2715707d",
+      "fileHash": "fa696ead",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "34517beb",
-      "needsInterop": true
-    },
-    "mapbox-gl": {
-      "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
-      "file": "mapbox-gl.js",
-      "fileHash": "645fb0ea",
+      "fileHash": "8e532ebc",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "b21bd2d0",
+      "fileHash": "88e096a9",
       "needsInterop": false
+    },
+    "mapbox-gl": {
+      "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
+      "file": "mapbox-gl.js",
+      "fileHash": "9f16bb76",
+      "needsInterop": true
     },
     "marked": {
       "src": "../../../node_modules/marked/lib/marked.esm.js",
       "file": "marked.js",
-      "fileHash": "d3977056",
+      "fileHash": "708cf62f",
       "needsInterop": false
-    },
-    "vuedraggable": {
-      "src": "../../../node_modules/vuedraggable/dist/vuedraggable.umd.js",
-      "file": "vuedraggable.js",
-      "fileHash": "f22fee0e",
-      "needsInterop": true
     }
   },
   "chunks": {
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-BYYN2XO5": {
-      "file": "chunk-BYYN2XO5.js"
+    "chunk-L6OFPWCY": {
+      "file": "chunk-L6OFPWCY.js"
     }
   }
 }

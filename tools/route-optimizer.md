@@ -2,9 +2,6 @@
 
 ## 智能路线规划 🎯
 
-
-## 优化建议 💡
-
 ::: tip 谷歌路线规划
 通过集成Google Maps API,该模块提供了强大的路线规划功能:
 - 🔍 智能地点搜索
@@ -26,3 +23,7 @@
 <RoutePlanner />
 </client-only>
 
+
+<client-only>  
+<NearbyGoogleSearch />
+</client-only>

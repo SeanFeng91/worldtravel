@@ -8,7 +8,8 @@ import OramaSearch from '../../components/oramasearch.vue'
 import GoogleHotelSearch from '../../components/GoogleHotelSearch.vue'
 import HotelSearchModal from '../../components/HotelSearchModal.vue'
 import RoutePlanner from '../../components/RoutePlanner.vue'
-
+import NearbyGoogleSearch from '../../components/NearbyGoogleSearch.vue'
+import MyTravelWorld from '../../components/MyTravelWorld.vue'
 
 import { h } from 'vue'
 
@@ -21,6 +22,8 @@ export default {
     app.component('GoogleHotelSearch', GoogleHotelSearch)
     app.component('HotelSearchModal', HotelSearchModal)
     app.component('RoutePlanner', RoutePlanner)
+    app.component('NearbyGoogleSearch', NearbyGoogleSearch)
+    app.component('MyTravelWorld', MyTravelWorld)
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {
