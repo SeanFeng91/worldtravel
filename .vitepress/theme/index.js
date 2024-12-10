@@ -7,6 +7,8 @@ import AMapTest from '../../components/AMapTest.vue'
 import OramaSearch from '../../components/oramasearch.vue'
 import GoogleHotelSearch from '../../components/GoogleHotelSearch.vue'
 import HotelSearchModal from '../../components/HotelSearchModal.vue'
+import RoutePlanner from '../../components/RoutePlanner.vue'
+
 
 import { h } from 'vue'
 
@@ -18,6 +20,7 @@ export default {
     app.component('OramaSearch', OramaSearch)
     app.component('GoogleHotelSearch', GoogleHotelSearch)
     app.component('HotelSearchModal', HotelSearchModal)
+    app.component('RoutePlanner', RoutePlanner)
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {
