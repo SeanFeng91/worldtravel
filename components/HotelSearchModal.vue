@@ -1,6 +1,9 @@
 <template>
-  <!-- 只显示悬浮按钮 -->
-  <button class="floating-search-btn" @click="showSearch = true">
+  <!-- 修改悬浮按钮结构 -->
+  <button 
+    class="floating-search-btn"
+    @click="showSearch = true"
+  >
     <i class="fas fa-hotel"></i>
     <span>住</span>
   </button>
@@ -589,37 +592,52 @@ const toggleAmenity = (amenity) => {
 </script>
 
 <style scoped>
-/* 悬浮按钮样式 */
+/* 修改悬浮按钮样式 */
 .floating-search-btn {
   position: fixed;
   width: 60px;
   height: 60px;
   right: 20px;
-  bottom: 230px;
+  bottom: 160px;
   background: #1a73e8;
   color: white;
   border: none;
   border-radius: 50%;
-  padding: 0px 0px;
-  display: flex;
-  align-items: center;
-  gap: 0px;
-  font-size: 20px;
-  justify-content: center;
-  font-family: 'Times New Roman', Times, serif;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   z-index: 1000;
-  transition: transform 0.2s, background-color 0.2s;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
 .floating-search-btn:hover {
-  transform: translateY(-2px);
-  background: #1557b0;
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  background: #e59b11;
+}
+
+.floating-search-btn:active {
+  transform: scale(0.95);
 }
 
 .floating-search-btn i {
   font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.floating-search-btn span {
+  font-size: 20px;
+  font-family: 'Times New Roman', Times, serif;
+  transition: transform 0.3s ease;
+}
+
+.floating-search-btn:hover i,
+.floating-search-btn:hover span {
+  transform: translateY(-2px);
 }
 
 /* 搜索页面样式 */

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../node_modules/@orama/wc-components/dist/esm/src/context/searchContext.ts"],
-  "sourcesContent": ["import type { Facet } from '@/types'\nimport type { SearchService } from '@/services/SearchService'\nimport { createStore } from '@stencil/store'\nimport type { ResultMap, SearchResultBySection } from '@/types'\nimport type { AnyOrama, Orama, SearchParams } from '@orama/orama'\nimport type { OramaClient } from '@oramacloud/client'\n\nconst store = createStore({\n  count: 0,\n  facets: [] as Facet[],\n  facetProperty: '', // TODO: consider to move to resultsMap\n  results: [] as SearchResultBySection[],\n  resultMap: {} as ResultMap,\n  highlightedIndex: -1,\n  loading: false,\n  error: false,\n  // TODO: Probable needs to be held in component property.\n  // Lets queckly dicudd about this again.\n  searchService: null as SearchService | null,\n  searchParams: null as SearchParams<Orama<AnyOrama | OramaClient>>,\n})\n\nconst { state: searchState, ...searchStore } = store\n\nexport { searchState, searchStore }\n"],
-  "mappings": ";;;;;;;;;;;;;;;;AAOA,IAAM,QAAQ,YAAY;EACxB,OAAO;EACP,QAAQ,CAAA;EACR,eAAe;;EACf,SAAS,CAAA;EACT,WAAW,CAAA;EACX,kBAAkB;EAClB,SAAS;EACT,OAAO;;;EAGP,eAAe;EACf,cAAc;CACf;IAEK,EAAE,OAAO,YAAW,IAAqB;AAAK,OAAL,OAAzC,CAAA,OAAA,CAAsC;",
-  "names": []
-}

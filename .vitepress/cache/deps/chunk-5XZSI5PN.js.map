@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../node_modules/@orama/wc-components/dist/esm/src/context/GlobalContext.ts"],
-  "sourcesContent": ["import { createStore } from '@stencil/store'\n\nconst { state: globalContext, ...globalStore } = createStore({\n  open: false,\n  currentTask: 'search' as 'search' | 'chat',\n  currentTerm: '',\n})\n\nexport { globalContext, globalStore }\n"],
-  "mappings": ";;;;;;;;;;;;;;;;IAEM,KAA2C,YAAY;EAC3D,MAAM;EACN,aAAa;EACb,aAAa;CACd;IAJK,EAAE,OAAO,cAAa,IAAA;IAAK,cAAW,OAAA,IAAtC,CAAA,OAAA,CAAwC;",
-  "names": []
-}

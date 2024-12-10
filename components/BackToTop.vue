@@ -44,7 +44,7 @@ onUnmounted(() => {
 .back-to-top {
   position: fixed;
   right: 20px;
-  bottom: 160px;
+  bottom: 230px;
   width:60px;
   height: 60px;
   border-radius: 50%;

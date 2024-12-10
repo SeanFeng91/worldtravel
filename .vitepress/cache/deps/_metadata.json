@@ -1,145 +1,52 @@
 {
-  "hash": "90ae0958",
+  "hash": "57414e96",
   "configHash": "53104f50",
-  "lockfileHash": "b3ce95d3",
-  "browserHash": "c7003bba",
+  "lockfileHash": "35175347",
+  "browserHash": "3223fafc",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "576eda9a",
+      "fileHash": "1b180803",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "ae701d50",
+      "fileHash": "1f668c64",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "e9e27630",
+      "fileHash": "6cad12a3",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "566e88e0",
+      "fileHash": "4b94e706",
       "needsInterop": true
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "25f42194",
+      "fileHash": "a5380191",
       "needsInterop": true
-    },
-    "@oramacloud/client": {
-      "src": "../../../node_modules/@oramacloud/client/dist/index.js",
-      "file": "@oramacloud_client.js",
-      "fileHash": "3c69a293",
-      "needsInterop": false
-    },
-    "@orama/vue-components": {
-      "src": "../../../node_modules/@orama/vue-components/dist/index.js",
-      "file": "@orama_vue-components.js",
-      "fileHash": "ad274b16",
-      "needsInterop": false
-    },
-    "axios": {
-      "src": "../../../node_modules/axios/index.js",
-      "file": "axios.js",
-      "fileHash": "a64f6db9",
-      "needsInterop": false
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "ead8b55a",
-      "needsInterop": false
-    },
-    "element-plus": {
-      "src": "../../../node_modules/element-plus/es/index.mjs",
-      "file": "element-plus.js",
-      "fileHash": "2fba9764",
+      "fileHash": "b6ab3577",
       "needsInterop": false
     }
   },
   "chunks": {
-    "orama-facets_3.entry-N3Y4C5SL": {
-      "file": "orama-facets_3__entry-N3Y4C5SL.js"
+    "chunk-THPMFJZZ": {
+      "file": "chunk-THPMFJZZ.js"
     },
-    "orama-toggler.entry-KIHWLIO2": {
-      "file": "orama-toggler__entry-KIHWLIO2.js"
-    },
-    "orama-chat-assistent-message_6.entry-OCLO2EM5": {
-      "file": "orama-chat-assistent-message_6__entry-OCLO2EM5.js"
-    },
-    "orama-button.entry-NVQ65C7I": {
-      "file": "orama-button__entry-NVQ65C7I.js"
-    },
-    "orama-text.entry-QO24FIT7": {
-      "file": "orama-text__entry-QO24FIT7.js"
-    },
-    "orama-chat-box.entry-6HWPXMEW": {
-      "file": "orama-chat-box__entry-6HWPXMEW.js"
-    },
-    "orama-logo-icon.entry-SBFQT2KM": {
-      "file": "orama-logo-icon__entry-SBFQT2KM.js"
-    },
-    "orama-search-box.entry-TFSV5NWR": {
-      "file": "orama-search-box__entry-TFSV5NWR.js"
-    },
-    "chunk-LGL2XIKM": {
-      "file": "chunk-LGL2XIKM.js"
-    },
-    "orama-search-button.entry-RW2GLUW3": {
-      "file": "orama-search-button__entry-RW2GLUW3.js"
-    },
-    "chunk-VKA6KFGM": {
-      "file": "chunk-VKA6KFGM.js"
-    },
-    "orama-chat-button_7.entry-BEJMFVRB": {
-      "file": "orama-chat-button_7__entry-BEJMFVRB.js"
-    },
-    "chunk-M5WWNCVR": {
-      "file": "chunk-M5WWNCVR.js"
-    },
-    "chunk-ADIIPX6Q": {
-      "file": "chunk-ADIIPX6Q.js"
-    },
-    "chunk-DSQPHNU4": {
-      "file": "chunk-DSQPHNU4.js"
-    },
-    "chunk-5XZSI5PN": {
-      "file": "chunk-5XZSI5PN.js"
-    },
-    "chunk-HXUFFIHY": {
-      "file": "chunk-HXUFFIHY.js"
-    },
-    "orama-chat_3.entry-M4MYUFOI": {
-      "file": "orama-chat_3__entry-M4MYUFOI.js"
-    },
-    "chunk-EWDHTKD6": {
-      "file": "chunk-EWDHTKD6.js"
-    },
-    "chunk-OCFBAW7U": {
-      "file": "chunk-OCFBAW7U.js"
-    },
-    "chunk-CNMOQ2TW": {
-      "file": "chunk-CNMOQ2TW.js"
-    },
-    "chunk-WWY2L2R3": {
-      "file": "chunk-WWY2L2R3.js"
-    },
-    "chunk-6BI6LT3C": {
-      "file": "chunk-6BI6LT3C.js"
-    },
-    "chunk-T2YHX6WC": {
-      "file": "chunk-T2YHX6WC.js"
-    },
-    "chunk-KT2WZD7D": {
-      "file": "chunk-KT2WZD7D.js"
+    "chunk-HKJ2B2AA": {
+      "file": "chunk-HKJ2B2AA.js"
     }
   }
 }
