@@ -205,7 +205,69 @@ export default {
 		else if (path.startsWith('/ai/travel-plans/') && request.method === 'DELETE') {
 		  // ... 删除旅行计划的代码 ...
 		}
-		
+
+		// 添加酒店搜索路由
+		else if (path === '/ai/hotels/search') {
+		  try {
+			// 验证 API Key
+			const apiKey = request.headers.get('X-API-Key');
+			if (apiKey !== env.API_KEY) {
+			  return new Response(JSON.stringify({ error: '无效的 API 密钥' }), {
+				status: 401,
+				headers: {
+				  ...corsHeaders,
+				  'Content-Type': 'application/json',
+				},
+			  });
+			}
+
+			const params = new URL(request.url).searchParams;
+			
+			// 修改语言参数为 zh-cn
+			const searchParams = {
+			  api_key: env.SERP_API_KEY,
+			  engine: 'google_hotels',
+			  q: params.get('q') || 'hangzhou',
+			  hl: 'zh-CN',
+			  gl: 'cn',
+			  check_in_date: params.get('check_in_date'),
+			  check_out_date: params.get('check_out_date'),
+			  currency: 'CNY'
+			};
+
+			const queryString = Object.entries(searchParams)
+			  .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+			  .join('&');
+			
+			const url = `https://serpapi.com/search?${queryString}`;
+			
+			console.log('请求 URL:', url);
+
+			const response = await fetch(url);
+			const data = await response.json();
+
+			return new Response(JSON.stringify(data), {
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			});
+
+		  } catch (error) {
+			console.error('酒店搜索失败:', error);
+			return new Response(JSON.stringify({ 
+			  error: '搜索失败',
+			  message: error.message 
+			}), {
+			  status: 500,
+			  headers: {
+				...corsHeaders,
+				'Content-Type': 'application/json'
+			  }
+			});
+		  }
+		}
+
 		// 未知路径
 		else {
 		  return new Response(JSON.stringify({ error: '未找到该路径', path }), {

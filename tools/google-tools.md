@@ -1,14 +1,21 @@
 <script setup>
 import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
+import GoogleHotelSearch from '../components/GoogleHotelSearch.vue'
 </script>
 
 # Google 旅游搜索工具
 
-这个页面用于收集和整理通过 Google 搜索获取的旅游信息。使用 Google Custom Search API 来搜索特定的旅游相关内容。
+## 酒店搜索
+<!-- <ClientOnly>
+  <div class="hotel-search-container">
+    <GoogleHotelSearch />
+  </div>
+</ClientOnly> -->
 
-<ClientOnly>
+## 旅游信息搜索
+<!-- <ClientOnly>
   <GoogleTravelSearch />
-</ClientOnly>
+</ClientOnly> -->
 
 ## 使用方法
 
@@ -27,3 +34,13 @@ import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
 （搜索结果将会自动添加到这里）
 
 ---
+
+<style>
+.hotel-search-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+}
+</style>

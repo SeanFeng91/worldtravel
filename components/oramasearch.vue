@@ -1,25 +1,49 @@
 <script>
+import { OramaClient } from "@oramacloud/client";
+import { OramaSearchBox } from "@orama/vue-components";
+
+const customConfiguration = {
+  "resultsMap": {
+    "path": "path",
+    "title": "title",
+    "section": "content",
+    "description": "content"
+  },
+  "colorScheme": "system",
+  "themeConfig": {}
+}
+
 export default {
   data() {
     return {
-      isOpen: false
+      isOpen: false,
+      searchBoxConfig: {
+        open: false,
+        index: {
+          endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
+          api_key: import.meta.env.VITE_ORAMA_API_KEY,
+        },
+        ...customConfiguration,
+      }
     }
   },
   mounted() {
     const searchBox = this.$el.querySelector('orama-search-box')
     const searchConfig = {
-      resultsMap: {
-        path: "path",
-        title: "title",
-        section: "section",
-        description: "section"
-      },
+      // resultsMap: {
+      //   path: "path",
+      //   title: "title",
+      //   section: "section",
+      //   description: "section"
+      // },
       colorScheme: "system",
       themeConfig: {},
       index: {
         endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
         api_key: import.meta.env.VITE_ORAMA_API_KEY,
-      }
+      },
+      ...customConfiguration,
+
     }
     
     Object.assign(searchBox, searchConfig)
@@ -31,20 +55,25 @@ export default {
   methods: {
     toggleSearch() {
       this.isOpen = !this.isOpen
-      const searchBox = this.$el.querySelector('orama-search-box')
-      searchBox.open = this.isOpen
+      this.searchBoxConfig.open = this.isOpen
     }
   }
 } 
 </script>
 
+
+
 <template>
-  <div id="orama-ui">
-    <orama-search-button @click="toggleSearch">
+  <main>
+    <section>
+      <div class="wrapper">
+        <orama-search-button v-bind="searchBoxConfig" @click="toggleSearch" >
       搜索...
-    </orama-search-button>
-    <orama-search-box></orama-search-box>
-  </div>
+       </orama-search-button>
+        <orama-search-box v-bind="searchBoxConfig" />
+      </div>
+    </section>
+  </main>
 </template>
 
 <style>

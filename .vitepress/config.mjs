@@ -197,6 +197,11 @@ export default defineConfig({
           target: 'https://lbs.amap.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/_AMapService/, '/AMapService')
+        },
+        '/api/hotels/search': {
+          target: 'https://serpapi.com/search',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/hotels\/search/, '')
         }
       }
     }

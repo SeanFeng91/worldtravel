@@ -12,12 +12,15 @@
     "docs:preview": "vitepress preview ."
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@langchain/community": "^0.3.16",
     "@langchain/core": "^0.3.19",
     "@orama/orama": "^3.0.2",
     "@orama/vue-components": "^0.1.23",
     "@orama/wc-components": "^0.1.23",
     "@oramacloud/client": "^2.1.4",
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.0",
     "langchain": "^0.3.6",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.8.0",
