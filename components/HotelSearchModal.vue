@@ -2,7 +2,7 @@
   <!-- 只显示悬浮按钮 -->
   <button class="floating-search-btn" @click="showSearch = true">
     <i class="fas fa-hotel"></i>
-    <span>Hotel</span>
+    <span>住</span>
   </button>
 
   <!-- 搜索界面使用 Teleport 确保在最顶层 -->
