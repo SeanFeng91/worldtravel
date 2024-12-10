@@ -28,20 +28,11 @@ export default {
   mounted() {
     const searchBox = this.$el.querySelector('orama-search-box')
     const searchConfig = {
-      // resultsMap: {
-      //   path: "path",
-      //   title: "title",
-      //   section: "section",
-      //   description: "section"
-      // },
-      colorScheme: "system",
-      themeConfig: {},
       index: {
         endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
         api_key: import.meta.env.VITE_ORAMA_API_KEY,
       },
       ...customConfiguration,
-
     }
     
     Object.assign(searchBox, searchConfig)
