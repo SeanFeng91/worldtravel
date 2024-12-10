@@ -1,12 +1,16 @@
 <template>
     <div class="route-planner">
       <div class="input-section">
-        <input 
-          v-model="newLocation" 
-          placeholder="输入目的地" 
-          @keyup.enter="addLocation"
-          class="location-input"
-        />
+        <div class="autocomplete-wrapper">
+          <input 
+            ref="autocompleteInput"
+            type="text"
+            v-model="newLocation" 
+            placeholder="输入目的地" 
+            class="location-input"
+            @keyup.enter="addLocation"
+          />
+        </div>
         <button 
           @click="addLocation"
           class="add-btn"
@@ -15,18 +19,19 @@
         </button>
       </div>
   
-      <!-- 地图容器 -->
-      <div 
-        ref="mapContainer" 
-        class="map-container"
-      ></div>
+      <div ref="mapContainer" class="map-container"></div>
   
       <div class="locations-list">
         <div 
           v-for="(location, index) in locations" 
-          :key="index" 
+          :key="index"
           class="location-item"
+          draggable="true"
+          @dragstart="dragStart(index)"
+          @dragover.prevent
+          @drop="drop($event, index)"
         >
+          <span class="drag-handle">⋮⋮</span>
           <span>{{ location.name }}</span>
           <button 
             @click="removeLocation(index)"
@@ -50,36 +55,80 @@
   import { calculateRoute, geocodeAddress } from '../utils/googleMaps'
   
   const mapContainer = ref(null)
+  const autocompleteInput = ref(null)
   const locations = ref([])
   const newLocation = ref('')
   const routeInfo = ref(null)
   let map = null
   let directionsService = null
   let directionsRenderer = null
+  let autocomplete = null
+  let draggedItemIndex = null
   
   onMounted(() => {
     initMap()
   })
   
+  function dragStart(index) {
+    draggedItemIndex = index
+  }
+  
+  function drop(event, index) {
+    event.preventDefault()
+    if (draggedItemIndex === index) return
+    
+    const items = [...locations.value]
+    const draggedItem = items[draggedItemIndex]
+    items.splice(draggedItemIndex, 1)
+    items.splice(index, 0, draggedItem)
+    locations.value = items
+    
+    updateRoute()
+  }
+  
   function initMap() {
-    // 加载 Google Maps JavaScript API
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&language=zh-CN`
     script.async = true
     script.defer = true
     
     script.onload = () => {
       map = new google.maps.Map(mapContainer.value, {
-        center: { lat: 35.86166, lng: 104.195397 }, // 中国中心位置
+        center: { lat: 35.86166, lng: 104.195397 },
         zoom: 4
       })
       
       directionsService = new google.maps.DirectionsService()
       directionsRenderer = new google.maps.DirectionsRenderer()
       directionsRenderer.setMap(map)
+
+      initAutocomplete()
     }
     
     document.head.appendChild(script)
+  }
+  
+  function initAutocomplete() {
+    if (!google || !autocompleteInput.value) return
+
+    autocomplete = new google.maps.places.Autocomplete(autocompleteInput.value, {
+      types: ['geocode'],
+    //   componentRestrictions: { country: 'cn' },
+      fields: ['formatted_address', 'geometry', 'name']
+    })
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace()
+      if (!place.geometry) {
+        console.error('未找到该地点的详细信息')
+        return
+      }
+
+      newLocation.value = place.formatted_address || place.name
+
+      map.setCenter(place.geometry.location)
+      map.setZoom(12)
+    })
   }
   
   async function addLocation() {
@@ -137,7 +186,6 @@
   
       directionsRenderer.setDirections(result)
       
-      // 更新路线信息
       const route = result.routes[0]
       let totalDistance = 0
       let totalDuration = 0
@@ -180,11 +228,17 @@
     gap: 10px;
   }
   
-  .location-input {
+  .autocomplete-wrapper {
     flex: 1;
+    position: relative;
+  }
+  
+  .location-input {
+    width: 100%;
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 14px;
   }
   
   .add-btn {
@@ -217,6 +271,14 @@
     background-color: #f5f5f5;
     margin-bottom: 8px;
     border-radius: 4px;
+    cursor: move;
+  }
+  
+  .drag-handle {
+    cursor: move;
+    padding: 0 10px;
+    color: #666;
+    user-select: none;
   }
   
   .remove-btn {
@@ -248,5 +310,29 @@
   button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
+  }
+  
+  .location-item:active {
+    opacity: 0.7;
+  }
+  
+  .location-item.dragging {
+    opacity: 0.5;
+    background-color: #e0e0e0;
+  }
+  
+  .pac-container {
+    border-radius: 4px;
+    margin-top: 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .pac-item {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  
+  .pac-item:hover {
+    background-color: #f5f5f5;
   }
   </style>
