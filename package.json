@@ -26,6 +26,7 @@
     "element-plus": "^2.9.0",
     "langchain": "^0.3.6",
     "leaflet": "^1.9.4",
+    "lodash": "^4.17.21",
     "mapbox-gl": "^3.8.0",
     "markdown-it": "^14.1.0",
     "markdown-it-emoji": "^3.0.0",

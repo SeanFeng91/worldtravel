@@ -22,6 +22,10 @@ const handleDayFocus = (day) => {
 }
 </script>
 
+# 机票和酒店查询
+
+<AmadeusSearch />
+
 # 旅行规划助手
 
 

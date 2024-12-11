@@ -1,3 +1,4 @@
+<!-- 该组件应该为测试版，目前没有使用 -->
 <template>
   <ClientOnly>
     <div class="google-travel-search">

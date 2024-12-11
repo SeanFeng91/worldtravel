@@ -10,7 +10,7 @@ import HotelSearchModal from '../../components/HotelSearchModal.vue'
 import RoutePlanner from '../../components/RoutePlanner.vue'
 import NearbyGoogleSearch from '../../components/NearbyGoogleSearch.vue'
 import MyTravelWorld from '../../components/MyTravelWorld.vue'
-
+import AmadeusSearch from '../../components/AmadeusSearch.vue'
 import { h } from 'vue'
 
 export default {
@@ -24,6 +24,7 @@ export default {
     app.component('RoutePlanner', RoutePlanner)
     app.component('NearbyGoogleSearch', NearbyGoogleSearch)
     app.component('MyTravelWorld', MyTravelWorld)
+    app.component('AmadeusSearch', AmadeusSearch)
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {
