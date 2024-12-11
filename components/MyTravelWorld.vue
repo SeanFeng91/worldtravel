@@ -129,7 +129,125 @@ const conflictCountryDetails = {
     warning: '⚠️ 政局不稳定，边境地区危险',
     lastUpdate: '2023-12'
   },
-  // ... 其他国家的信息
+  'SD': {
+    name: '苏丹',
+    risk: '极高',
+    reason: '军事冲突，内战',
+    warning: '⚠️ 严重暴力冲突，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'IQ': {
+    name: '伊拉克',
+    risk: '高',
+    reason: '恐怖组织活动，政局不稳',
+    warning: '⚠️ 安全形势严峻，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'PS': {
+    name: '巴勒斯坦',
+    risk: '极高',
+    reason: '武装冲突，战争',
+    warning: '⚠️ 处于战争状态，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'IL': {
+    name: '以色列',
+    risk: '极高',
+    reason: '武装冲突，战争',
+    warning: '⚠️ 处于战争状态，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'LB': {
+    name: '黎巴嫩',
+    risk: '高',
+    reason: '地区局势紧张，暴力事件',
+    warning: '⚠️ 局势动荡，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'UA': {
+    name: '乌克兰',
+    risk: '极高',
+    reason: '战争状态',
+    warning: '⚠️ 处于战争状态，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'AF': {
+    name: '阿富汗',
+    risk: '极高',
+    reason: '恐怖组织活动，政局动荡',
+    warning: '⚠️ 安全形势极其严峻，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'YE': {
+    name: '也门',
+    risk: '极高',
+    reason: '内战，人道主义危机',
+    warning: '⚠️ 武装冲突持续，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'SO': {
+    name: '索马里',
+    risk: '极高',
+    reason: '恐怖组织活动，海盗威胁',
+    warning: '⚠️ 安全环境恶劣，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'ET': {
+    name: '埃塞俄比亚',
+    risk: '高',
+    reason: '地区冲突，政治动荡',
+    warning: '⚠️ 部分地区存在安全风险，谨慎前往',
+    lastUpdate: '2023-12'
+  },
+  'ML': {
+    name: '马里',
+    risk: '高',
+    reason: '恐怖组织活动，政变风险',
+    warning: '⚠️ 安全局势不稳，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'NE': {
+    name: '尼日尔',
+    risk: '高',
+    reason: '政变风险，恐怖主义威胁',
+    warning: '⚠️ 政局动荡，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'CD': {
+    name: '刚果民主共和国',
+    risk: '高',
+    reason: '武装冲突，疾病风险',
+    warning: '⚠️ 安全风险高，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'CF': {
+    name: '中非共和国',
+    risk: '高',
+    reason: '内战，武装团体活动',
+    warning: '⚠️ 局势动荡，不建议前往',
+    lastUpdate: '2023-12'
+  },
+  'NG': {
+    name: '尼日利亚',
+    risk: '高',
+    reason: '博科圣地等恐怖组织活动',
+    warning: '⚠️ 部分地区极其危险，谨慎前往',
+    lastUpdate: '2023-12'
+  },
+  'SS': {
+    name: '南苏丹',
+    risk: '极高',
+    reason: '内战，人道主义危机',
+    warning: '⚠️ 暴力冲突频发，严禁前往',
+    lastUpdate: '2023-12'
+  },
+  'LY': {
+    name: '利比亚',
+    risk: '极高',
+    reason: '内战，武装组织控制',
+    warning: '⚠️ 安全形势严峻，严禁前往',
+    lastUpdate: '2023-12'
+  }
 }
 
 // 加载 Google Maps API
@@ -269,16 +387,16 @@ const initMap = async () => {
         <div style="
           background: #d32f2f;
           border-radius: 50%;
-          padding: 8px;
+          padding: 4px;
           color: white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 2px rgba(0,0,0,0.3);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 24px;
-          height: 24px;
-          font-size: 16px;
+          width: 20px;
+          height: 20px;
+          font-size: 12px;
         ">⚠️</div>
       `
 
@@ -294,17 +412,34 @@ const initMap = async () => {
       const infoWindow = new maps.InfoWindow({
         content: `
           <div class="info-window">
-            <h3>${countryInfo.name}</h3>
-            <p class="risk-level">风险等级：${countryInfo.risk}</p>
-            <p class="reason">原因：${countryInfo.reason}</p>
-            <p class="warning">${countryInfo.warning}</p>
-            <div class="news-feed">
-              <h4>最新动态</h4>
-              <div id="news-${countryCode}">加载中...</div>
+            <div class="country-header">
+              <h3>${countryInfo.name}</h3>
+              <div class="risk-badge ${countryInfo.risk === '极高' ? 'extreme' : 'high'}">
+                风险等级：${countryInfo.risk}
+              </div>
             </div>
-            <p class="update-time">更新时间：${countryInfo.lastUpdate}</p>
+            
+            <div class="info-section">
+              <div class="reason-box">
+                <strong>原因：</strong>${countryInfo.reason}
+              </div>
+              <div class="warning-box">
+                ${countryInfo.warning}
+              </div>
+            </div>
+
+            <div class="news-section">
+              <div class="news-header">
+                <span class="news-icon">🔔</span>
+                <h4>${countryInfo.name}安全动态</h4>
+              </div>
+              <div id="news-${countryCode}" class="news-content">
+                <div class="loading-spinner">加载中...</div>
+              </div>
+            </div>
           </div>
-        `
+        `,
+        maxWidth: 400
       })
 
       // 添加点击事件
@@ -333,37 +468,57 @@ const loadLatestNews = async (countryCode) => {
       return
     }
 
-    const url = `https://newsdata.io/api/1/news?apikey=${API_KEY}&q=${countryName}&language=zh`
-    console.log('请求 URL:', url) // 调试日志
+    // 搜索该国家的安全相关新闻（中英文）
+    const searchQuery = `"${countryName}" AND (security OR safety OR conflict OR "national security" OR 安全 OR 冲突)`
+    const url = `https://newsdata.io/api/1/news?apikey=${API_KEY}&q=${encodeURIComponent(searchQuery)}&language=zh,en`
     
     const newsElement = document.getElementById(`news-${countryCode}`)
     if (!newsElement) {
-      console.error('未找到新闻元素:', `news-${countryCode}`) // 调试日志
+      console.error('未找到新闻元素:', `news-${countryCode}`)
       return
     }
 
+    newsElement.innerHTML = '<div class="loading-news">正在加载最新动态...</div>'
+
     const response = await fetch(url)
     const data = await response.json()
-    console.log('获取到的新闻数据:', data) // 调试日志
+    console.log('获取到的新闻数据:', data)
 
     if (data.results && data.results.length > 0) {
-      const latestNews = data.results[0]
-      newsElement.innerHTML = `
+      const newsHtml = data.results.slice(0, 5).map(news => `
         <div class="news-item">
-          <a href="${latestNews.link}" target="_blank" rel="noopener noreferrer">
-            ${latestNews.title}
-          </a>
-          <div class="news-date">${new Date(latestNews.pubDate).toLocaleDateString('zh-CN')}</div>
+          <div class="news-content">
+            <a href="${news.link}" target="_blank" rel="noopener noreferrer" class="news-title">
+              ${news.title}
+            </a>
+            <div class="news-meta">
+              <span class="news-source">${news.source_id || '未知来源'}</span>
+              <span class="news-date">${new Date(news.pubDate).toLocaleDateString('zh-CN')}</span>
+              <span class="news-language">${news.language === 'zh' ? '中文' : '英文'}</span>
+            </div>
+          </div>
+        </div>
+      `).join('')
+      
+      newsElement.innerHTML = `
+        <div class="news-container">
+          <div class="news-header">
+            <h4>🔔 ${countryName}安全动态</h4>
+            <span class="news-update-time">更新于 ${new Date().toLocaleTimeString('zh-CN')}</span>
+          </div>
+          <div class="news-list">
+            ${newsHtml}
+          </div>
         </div>
       `
     } else {
-      newsElement.innerHTML = '暂无相关新闻'
+      newsElement.innerHTML = '<div class="no-news">暂无相关安全动态</div>'
     }
   } catch (error) {
-    console.error('加载新闻失败:', error) // 详细的错误信息
+    console.error('加载新闻失败:', error)
     const newsElement = document.getElementById(`news-${countryCode}`)
     if (newsElement) {
-      newsElement.innerHTML = '新闻加载失败'
+      newsElement.innerHTML = '<div class="news-error">新闻加载失败</div>'
     }
   }
 }
@@ -527,55 +682,158 @@ const getCountryCenter = (countryCode) => {
 
 /* 信息窗口样式 */
 .info-window {
-  padding: 15px;
-  max-width: 300px;
+  padding: 16px;
+  max-width: 380px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.info-window h3 {
-  margin: 0 0 10px 0;
-  color: #d32f2f;
+.country-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.risk-level {
-  color: #d32f2f;
-  font-weight: bold;
+.country-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #202124;
+  font-weight: 600;
 }
 
-.warning {
-  background-color: #ffebee;
-  padding: 8px;
+.risk-badge {
+  padding: 4px 8px;
   border-radius: 4px;
-  margin: 10px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
 }
 
-.news-feed {
-  margin-top: 10px;
+.risk-badge.extreme {
+  background-color: #d32f2f;
+}
+
+.risk-badge.high {
+  background-color: #f44336;
+}
+
+.info-section {
+  margin-bottom: 16px;
+}
+
+.reason-box {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  color: #3c4043;
+}
+
+.warning-box {
+  background-color: #fef2f2;
+  border-left: 4px solid #dc2626;
+  padding: 12px;
+  margin: 12px 0;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.news-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.news-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.news-icon {
+  font-size: 16px;
+}
+
+.news-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #1a73e8;
+  flex-grow: 1;
+}
+
+.news-refresh {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #5f6368;
+}
+
+.news-content {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .news-item {
-  margin: 8px 0;
-  font-size: 13px;
-  line-height: 1.4;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.news-item a {
-  color: #1976d2;
+.news-title {
+  color: #202124;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  display: block;
   text-decoration: none;
 }
 
-.news-item a:hover {
-  text-decoration: underline;
+.news-title:hover {
+  color: #1a73e8;
 }
 
-.news-date {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+.news-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #5f6368;
 }
 
-.update-time {
-  color: #666;
-  font-size: 12px;
-  margin-top: 10px;
+.news-source {
+  color: #1a73e8;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: #5f6368;
+}
+
+/* 自定义滚动条 */
+.news-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.news-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.news-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.news-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>

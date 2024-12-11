@@ -94,7 +94,7 @@ export default defineConfig({
             { text: '行程规划', link: '/tools/itinerary-planner' },
             { text: '签证追踪', link: '/tools/visa-tracker' },
             { text: '路线优化', link: '/tools/route-optimizer' },
-            { text: '已经去过的', link: '/tools/visitplace' }
+            { text: '世界足迹地图', link: '/tools/visitplace' }
           ]
         }
       ]
