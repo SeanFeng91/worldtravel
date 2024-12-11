@@ -1,5 +1,5 @@
 <script setup>
-import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
+// import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
 import GoogleHotelSearch from '../components/GoogleHotelSearch.vue'
 </script>
 
