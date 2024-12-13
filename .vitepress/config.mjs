@@ -25,6 +25,7 @@ export default defineConfig({
             { text: '未来计划', link: '/guide/future-plan' },
             { text: '存在困难', link: '/guide/problems' },
             { text: 'AI 图像生成示例', link: '/guide/cloudflareAI.md' },
+            { text: '竞品分析', link: '/guide/Competition.md' },
           ]
         },
         // {
