@@ -207,6 +207,11 @@ export default defineConfig({
           rewrite: (path) => path.replace(/^\/api\/hotels\/search/, '')
         }
       }
+    },
+    markdown: {
+      toc: {
+        level: [1, 2, 3] // 显示一级到三级标题
+      }
     }
   }
 })
