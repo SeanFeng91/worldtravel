@@ -5,6 +5,10 @@ export default defineConfig({
   description: "一个专业的环球旅行规划指南",
   themeConfig: {
     logo: '/logo.png',
+    outline: {
+      level: [1, 4], // 显示 h2 到 h4 的标题
+      label: '本页目录'
+    },
     nav: [
       { text: '首页', link: '/' },
       { text: '指南', link: '/guide/getting-started' },

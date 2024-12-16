@@ -12,6 +12,8 @@ import NearbyGoogleSearch from '../../components/NearbyGoogleSearch.vue'
 import MyTravelWorld from '../../components/MyTravelWorld.vue'
 import AmadeusSearch from '../../components/AmadeusSearch.vue'
 import { h } from 'vue'
+import Disqus from '../../components/disqus.vue'
+
 
 export default {
   extends: DefaultTheme,
@@ -34,8 +36,10 @@ export default {
         h(AMapTest),
         h(HotelSearchModal),
         // h(GoogleHotelSearch),
+        
       ],
-      'nav-bar-content-before': () => h(OramaSearch)
+      'nav-bar-content-before': () => h(OramaSearch),
+      'doc-after': () => h(Disqus)
     })
   }
 } 

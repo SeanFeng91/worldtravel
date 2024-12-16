@@ -25,6 +25,8 @@ Wanderboat是一款由华人团队开发的AI旅行应用，被称为“专注�
 网址：https://layla.ai/zh
 
 ![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1734056519833_image.png)
+![image.png](https://cloudflare-imgbed-1d8.pages.dev/file/1734081991150_image.png)
+收费略贵哈哈。￥200每月。
 
 ## TripAdvisor
 网站：https://www.tripadvisor.com/TripBuilder
