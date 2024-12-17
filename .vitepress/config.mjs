@@ -100,7 +100,7 @@ export default defineConfig({
             { text: '签证追踪', link: '/tools/visa-tracker' },
             { text: '路线优化', link: '/tools/route-optimizer' },
             { text: '世界足迹地图', link: '/tools/visitplace' },
-            { text: '机票和酒店查询', link: '/tools/amadeus-search' }
+            // { text: '机票和酒店查询', link: '/tools/amadeus-search' }
           ]
         }
       ]

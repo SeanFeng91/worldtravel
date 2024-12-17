@@ -14,13 +14,17 @@ hero:
 
 features:
   - icon: 🗺️
-    title: 交互式地图
-    details: 使用交互式地图规划你的旅行路线
+    title: Blog建设方案
+    details: 规划、想法、思路、计划
     link: /guide/future-plan
   - icon: 📝
-    title: 出行计划
+    title: 旅行方案
     details: 为下一次出行做好充足的准备
-    link: /trip-plan/midasia-three
+    link: /trip-plan/index
+  - icon: 🛠️
+    title: 出行工具
+    details: 收集各类在出行过程中有用的工具
+    link: /tools/index
 
 ---
 
