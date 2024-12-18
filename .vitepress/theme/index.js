@@ -5,7 +5,7 @@ import FloatingChat from '../../components/FloatingChat.vue'
 import BackToTop from '../../components/BackToTop.vue'
 import AMapTest from '../../components/AMapTest.vue'
 import OramaSearch from '../../components/oramasearch.vue'
-import GoogleHotelSearch from '../../components/GoogleHotelSearch.vue'
+// import GoogleHotelSearch from '../../components/GoogleHotelSearch.vue'
 import HotelSearchModal from '../../components/HotelSearchModal.vue'
 import RoutePlanner from '../../components/RoutePlanner.vue'
 import NearbyGoogleSearch from '../../components/NearbyGoogleSearch.vue'
@@ -21,7 +21,7 @@ export default {
     app.component('TravelMap', TravelMap)
     app.component('PresetRouteMap', PresetRouteMap)
     app.component('OramaSearch', OramaSearch)
-    app.component('GoogleHotelSearch', GoogleHotelSearch)
+    // app.component('GoogleHotelSearch', GoogleHotelSearch)
     app.component('HotelSearchModal', HotelSearchModal)
     app.component('RoutePlanner', RoutePlanner)
     app.component('NearbyGoogleSearch', NearbyGoogleSearch)

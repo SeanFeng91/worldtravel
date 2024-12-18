@@ -1,6 +1,6 @@
 <script setup>
 // import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
-import GoogleHotelSearch from '../components/GoogleHotelSearch.vue'
+// import GoogleHotelSearch from '../components/GoogleHotelSearch.vue'
 </script>
 
 # Google 旅游搜索工具
