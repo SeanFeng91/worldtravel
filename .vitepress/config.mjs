@@ -1,8 +1,17 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from "vitepress-plugin-mermaid";
 
-export default defineConfig({
+
+export default withMermaid(defineConfig({
   title: "环球旅行规划",
   description: "一个专业的环球旅行规划指南",
+  // 添加 Mermaid 配置
+  mermaid: {
+    theme: 'default',
+  },
+  mermaidPlugin: {
+    class: 'mermaid'
+  },
   themeConfig: {
     logo: '/logo.png',
     outline: {
@@ -52,6 +61,7 @@ export default defineConfig({
               items:[
                 {text:'13天行程',link:'/trip-plan/midasia-three'},
                 {text:'参考资料',link:'/trip-plan/reference'},
+                {text:'旅行手册模板',link:'/trip-plan/TravelBlogTemplate'},
               ]
             }
           ]
@@ -213,9 +223,15 @@ export default defineConfig({
       }
     },
     markdown: {
-      toc: {
-        level: [1, 2, 3] // 显示一级到三级标题
+      config: (md) => {
+        md.use(markdownItMermaid, {
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose'
+        });
+        md.use(markdownItTaskLists);
       }
     }
   }
-})
+}))
+

@@ -13,6 +13,9 @@ import MyTravelWorld from '../../components/MyTravelWorld.vue'
 import AmadeusSearch from '../../components/AmadeusSearch.vue'
 import { h } from 'vue'
 import Disqus from '../../components/disqus.vue'
+import GoogleSearchElement from '../../components/GoogleSearchElement.vue'
+import ExchangeRateCalculator from '../../components/ExchangeRateCalculator.vue';
+import './custom.css'
 
 
 export default {
@@ -21,12 +24,14 @@ export default {
     app.component('TravelMap', TravelMap)
     app.component('PresetRouteMap', PresetRouteMap)
     app.component('OramaSearch', OramaSearch)
-    // app.component('GoogleHotelSearch', GoogleHotelSearch)
     app.component('HotelSearchModal', HotelSearchModal)
     app.component('RoutePlanner', RoutePlanner)
     app.component('NearbyGoogleSearch', NearbyGoogleSearch)
     app.component('MyTravelWorld', MyTravelWorld)
     app.component('AmadeusSearch', AmadeusSearch)
+    app.component('GoogleSearchElement', GoogleSearchElement)
+    app.component('ExchangeRateCalculator', ExchangeRateCalculator);
+
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {
@@ -35,7 +40,6 @@ export default {
         h(BackToTop),
         h(AMapTest),
         h(HotelSearchModal),
-        // h(GoogleHotelSearch),
         
       ],
       'nav-bar-content-before': () => h(OramaSearch),

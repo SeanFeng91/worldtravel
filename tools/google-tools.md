@@ -1,46 +1,22 @@
-<script setup>
-// import GoogleTravelSearch from '../components/GoogleTravelSearch.vue'
-// import GoogleHotelSearch from '../components/GoogleHotelSearch.vue'
-</script>
-
 # Google 旅游搜索工具
 
-## 酒店搜索
-<!-- <ClientOnly>
-  <div class="hotel-search-container">
-    <GoogleHotelSearch />
-  </div>
-</ClientOnly> -->
+这个页面提供了专门针对旅游信息的 Google 搜索功能。你可以搜索景点、美食、住宿等旅游相关信息。
 
-## 旅游信息搜索
-<!-- <ClientOnly>
-  <GoogleTravelSearch />
-</ClientOnly> -->
+<GoogleSearchElement />
 
-## 使用方法
+## 使用提示
 
-1. 在上方搜索框中输入目的地或关键词
-2. 选择搜索类型：
-   - 一般搜索
-   - 景点搜索
-   - 美食搜索
-   - 住宿搜索
-   - 旅游攻略
-3. 点击搜索按钮获取结果
-4. 可以将有用的搜索结果保存到此文档中
+1. 在搜索框中输入你想要查找的旅游信息
+2. 可以使用以下关键词组合来优化搜索结果：
+   - 添加"景点"、"美食"、"住宿"等关键词
+   - 添加具体的地点名称
+   - 添加"攻略"、"推荐"等词语
 
-## 已保存的搜索结果
+## 搜索示例
 
-（搜索结果将会自动添加到这里）
+- "东京必去景点推荐"
+- "巴黎米其林餐厅"
+- "普吉岛度假酒店"
+- "纽约自由行攻略"
 
 ---
-
-<style>
-.hotel-search-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
-}
-</style>

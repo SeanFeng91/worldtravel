@@ -15,6 +15,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@langchain/community": "^0.3.16",
     "@langchain/core": "^0.3.19",
+    "@mermaid-js/mermaid-mindmap": "^9.3.0",
     "@orama/highlight": "^0.1.8",
     "@orama/orama": "^3.0.2",
     "@orama/switch": "^3.0.2",
@@ -30,13 +31,16 @@
     "mapbox-gl": "^3.8.0",
     "markdown-it": "^14.1.0",
     "markdown-it-emoji": "^3.0.0",
+    "markdown-it-mermaid": "^0.2.5",
     "marked": "^15.0.3",
     "vue": "^3.3.0",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
+    "mermaid": "^11.4.1",
     "vitepress": "^1.5.0",
+    "vitepress-plugin-mermaid": "^2.0.17",
     "wrangler": "^3.90.0"
   }
 }
