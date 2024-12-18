@@ -51,7 +51,7 @@
   const currentDate = new Date().toLocaleDateString('zh-CN')
   
   // 和风天气 API Key
-  const WEATHER_KEY = '85bf6e07732444d0bb7f3d9ec69606f9'
+  const WEATHER_KEY = import.meta.env.VITE_WEATHER_KEY
   
   async function fetchWeather() {
     try {
