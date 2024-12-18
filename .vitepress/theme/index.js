@@ -15,6 +15,8 @@ import { h } from 'vue'
 import Disqus from '../../components/disqus.vue'
 import GoogleSearchElement from '../../components/GoogleSearchElement.vue'
 import ExchangeRateCalculator from '../../components/ExchangeRateCalculator.vue';
+import WeatherWidget from '../../components/WeatherWidget.vue'
+
 import './custom.css'
 
 
@@ -31,6 +33,8 @@ export default {
     app.component('AmadeusSearch', AmadeusSearch)
     app.component('GoogleSearchElement', GoogleSearchElement)
     app.component('ExchangeRateCalculator', ExchangeRateCalculator);
+    app.component('WeatherWidget', WeatherWidget)
+
 
   },
   Layout() {

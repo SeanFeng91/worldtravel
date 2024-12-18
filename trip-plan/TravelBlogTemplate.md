@@ -183,3 +183,11 @@ gantt
   title="皇后镇实时摄像头"
 >
 </iframe>
+
+<!-- <WeatherWidget location="101010100" city="北京" /> -->
+<!-- 多个城市天气 -->
+<div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+  <WeatherWidget location="101010100" city="北京" />
+  <WeatherWidget location="101020100" city="杭州" />
+  <WeatherWidget location="101280101" city="广州" />
+</div>
