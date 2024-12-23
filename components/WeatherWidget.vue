@@ -1,4 +1,5 @@
 <template>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qweather-icons@1.6.0/font/qweather-icons.css">
     <div class="weather-widget">
       <div v-if="weather" class="weather-content">
         <div class="weather-header">
@@ -11,7 +12,7 @@
           </div>
           <div class="weather-desc">
             {{ weather.text }}
-            <img :src="getWeatherIcon(weather.icon)" :alt="weather.text">
+            <i :class="'qi-' + weather.icon"></i>
           </div>
         </div>
         <div class="weather-details">
@@ -21,7 +22,7 @@
         <div class="forecast" v-if="forecast.length">
           <div v-for="day in forecast" :key="day.fxDate" class="forecast-item">
             <span>{{ formatDate(day.fxDate) }}</span>
-            <img :src="getWeatherIcon(day.iconDay)" :alt="day.textDay">
+            <i :class="'qi-' + day.iconDay"></i>
             <span>{{ day.tempMin }}° / {{ day.tempMax }}°</span>
           </div>
         </div>
@@ -86,10 +87,6 @@
     return date.toLocaleDateString('zh-CN', { weekday: 'short' })
   }
   
-  function getWeatherIcon(code) {
-    return `https://qweather.com/img/icons/${code}.png`
-  }
-  
   onMounted(fetchWeather)
   </script>
   
@@ -138,9 +135,8 @@
     gap: 0.5rem;
   }
   
-  .weather-desc img {
-    width: 40px;
-    height: 40px;
+  .weather-desc i {
+    font-size: 40px;
   }
   
   .weather-details {
@@ -168,8 +164,7 @@
     padding: 0.5rem 0;
   }
   
-  .forecast-item img {
-    width: 24px;
-    height: 24px;
+  .forecast-item i {
+    font-size: 24px;
   }
   </style>
