@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@google/generative-ai": "^0.21.0",
+    "@googlemaps/js-api-loader": "^1.16.8",
     "@langchain/community": "^0.3.16",
     "@langchain/core": "^0.3.19",
     "@mermaid-js/mermaid-mindmap": "^9.3.0",
@@ -32,7 +34,7 @@
     "markdown-it": "^14.1.0",
     "markdown-it-emoji": "^3.0.0",
     "markdown-it-mermaid": "^0.2.5",
-    "marked": "^15.0.3",
+    "marked": "^15.0.4",
     "vue": "^3.3.0",
     "vuedraggable": "^4.1.0"
   },

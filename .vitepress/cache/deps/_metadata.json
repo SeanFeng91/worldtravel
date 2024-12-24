@@ -1,115 +1,112 @@
 {
-  "hash": "7a20a7ad",
+  "hash": "0a77a647",
   "configHash": "7a7aa69f",
-  "lockfileHash": "22b089ed",
-  "browserHash": "1e7fadb2",
+  "lockfileHash": "84a01c8c",
+  "browserHash": "d1923341",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "6dad4caa",
+      "fileHash": "a8252ea8",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "21593c4c",
+      "fileHash": "139b2a19",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "e3edcc1b",
+      "fileHash": "9b085c75",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "9e795b45",
+      "fileHash": "0e35f3b6",
       "needsInterop": true
     },
     "@braintree/sanitize-url": {
       "src": "../../../node_modules/@braintree/sanitize-url/dist/index.js",
       "file": "@braintree_sanitize-url.js",
-      "fileHash": "aa535bd9",
+      "fileHash": "b4dccf45",
       "needsInterop": true
     },
     "dayjs": {
       "src": "../../../node_modules/dayjs/dayjs.min.js",
       "file": "dayjs.js",
-      "fileHash": "573b1b69",
+      "fileHash": "574ddf22",
       "needsInterop": true
     },
     "debug": {
       "src": "../../../node_modules/debug/src/browser.js",
       "file": "debug.js",
-      "fileHash": "92006b7b",
+      "fileHash": "73e9cac4",
       "needsInterop": true
     },
     "cytoscape-cose-bilkent": {
       "src": "../../../node_modules/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js",
       "file": "cytoscape-cose-bilkent.js",
-      "fileHash": "d3fad9c8",
+      "fileHash": "fbe26850",
       "needsInterop": true
     },
     "cytoscape": {
       "src": "../../../node_modules/cytoscape/dist/cytoscape.esm.mjs",
       "file": "cytoscape.js",
-      "fileHash": "a3a1c701",
+      "fileHash": "7274876f",
       "needsInterop": false
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "01677062",
+      "fileHash": "713911ce",
       "needsInterop": true
     },
     "axios": {
       "src": "../../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "afd18116",
+      "fileHash": "6fd33fae",
       "needsInterop": false
     },
     "lodash/debounce": {
       "src": "../../../node_modules/lodash/debounce.js",
       "file": "lodash_debounce.js",
-      "fileHash": "55d04bb6",
+      "fileHash": "2e42bb28",
       "needsInterop": true
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "dc00521d",
+      "fileHash": "403c00dd",
       "needsInterop": false
     },
-    "dayjs/plugin/isoWeek.js": {
-      "src": "../../../node_modules/dayjs/esm/plugin/isoWeek/index.js",
-      "file": "dayjs_plugin_isoWeek__js.js",
-      "fileHash": "fd54a52a",
+    "@google/generative-ai": {
+      "src": "../../../node_modules/@google/generative-ai/dist/index.mjs",
+      "file": "@google_generative-ai.js",
+      "fileHash": "eb8c24ee",
       "needsInterop": false
     },
-    "dayjs/plugin/customParseFormat.js": {
-      "src": "../../../node_modules/dayjs/esm/plugin/customParseFormat/index.js",
-      "file": "dayjs_plugin_customParseFormat__js.js",
-      "fileHash": "56790907",
+    "marked": {
+      "src": "../../../node_modules/marked/lib/marked.esm.js",
+      "file": "marked.js",
+      "fileHash": "894509ec",
       "needsInterop": false
     },
-    "dayjs/plugin/advancedFormat.js": {
-      "src": "../../../node_modules/dayjs/esm/plugin/advancedFormat/index.js",
-      "file": "dayjs_plugin_advancedFormat__js.js",
-      "fileHash": "0df7f548",
+    "@googlemaps/js-api-loader": {
+      "src": "../../../node_modules/@googlemaps/js-api-loader/dist/index.mjs",
+      "file": "@googlemaps_js-api-loader.js",
+      "fileHash": "baece773",
       "needsInterop": false
     }
   },
   "chunks": {
-    "chunk-QNAROPK2": {
-      "file": "chunk-QNAROPK2.js"
-    },
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-HKJ2B2AA": {
-      "file": "chunk-HKJ2B2AA.js"
+    "chunk-L6OFPWCY": {
+      "file": "chunk-L6OFPWCY.js"
     }
   }
 }
