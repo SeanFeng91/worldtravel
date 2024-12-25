@@ -444,16 +444,19 @@ const handleServerContent = (serverContent) => {
   if (modelTurn) {
     let text = modelTurn.parts?.[0]?.text
     if (text) {
-      // 处理文本格式
+      // 改进文本格式处理
       text = text
         // 移除句子开头的逗号和空格
         .replace(/^[,，]\s*/g, '')
-        // 合并多余的空行
-        .replace(/\n\s*\n/g, '\n')
-        // 合并被截断的句子（不是在标点符号后的换行）
-        .replace(/([^。！？：、，\n])\n/g, '$1')
-        // 确保列表项保持换行
+        // 修复被截断的markdown加粗语法
+        .replace(/\*\*([^*]+)$/, '**$1**')
+        .replace(/^\*([^*]+)\*\*/, '**$1**')
+        // 确保列表项格式正确
         .replace(/^[•\-*]\s*/gm, '\n• ')
+        // 合并多余的空行，但保留markdown格式
+        .replace(/\n{3,}/g, '\n\n')
+        // 只在非markdown语法的地方合并行
+        .replace(/([^*_`#\n])\n([^*_`#\n])/g, '$1 $2')
         // 移除末尾多余的换行
         .trim()
 
