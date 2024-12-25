@@ -36,7 +36,9 @@
     "markdown-it-mermaid": "^0.2.5",
     "marked": "^15.0.4",
     "vue": "^3.3.0",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "websocket": "^1.0.35",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

@@ -1,103 +1,97 @@
 {
-  "hash": "0a77a647",
+  "hash": "0228b284",
   "configHash": "7a7aa69f",
-  "lockfileHash": "84a01c8c",
-  "browserHash": "d1923341",
+  "lockfileHash": "ac6444ed",
+  "browserHash": "889a3bd2",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "a8252ea8",
+      "fileHash": "082ee722",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "139b2a19",
+      "fileHash": "d440dbfe",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "9b085c75",
+      "fileHash": "1e969eca",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "0e35f3b6",
+      "fileHash": "f22b650c",
       "needsInterop": true
     },
     "@braintree/sanitize-url": {
       "src": "../../../node_modules/@braintree/sanitize-url/dist/index.js",
       "file": "@braintree_sanitize-url.js",
-      "fileHash": "b4dccf45",
+      "fileHash": "f86411c2",
       "needsInterop": true
     },
     "dayjs": {
       "src": "../../../node_modules/dayjs/dayjs.min.js",
       "file": "dayjs.js",
-      "fileHash": "574ddf22",
+      "fileHash": "0e4f03c2",
       "needsInterop": true
     },
     "debug": {
       "src": "../../../node_modules/debug/src/browser.js",
       "file": "debug.js",
-      "fileHash": "73e9cac4",
+      "fileHash": "9d8283c1",
       "needsInterop": true
     },
     "cytoscape-cose-bilkent": {
       "src": "../../../node_modules/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js",
       "file": "cytoscape-cose-bilkent.js",
-      "fileHash": "fbe26850",
+      "fileHash": "23f3bb3c",
       "needsInterop": true
     },
     "cytoscape": {
       "src": "../../../node_modules/cytoscape/dist/cytoscape.esm.mjs",
       "file": "cytoscape.js",
-      "fileHash": "7274876f",
+      "fileHash": "e9632aba",
       "needsInterop": false
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "713911ce",
+      "fileHash": "f502fd49",
       "needsInterop": true
     },
     "axios": {
       "src": "../../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "6fd33fae",
+      "fileHash": "4007d27c",
       "needsInterop": false
     },
     "lodash/debounce": {
       "src": "../../../node_modules/lodash/debounce.js",
       "file": "lodash_debounce.js",
-      "fileHash": "2e42bb28",
+      "fileHash": "72999dc9",
       "needsInterop": true
-    },
-    "markdown-it": {
-      "src": "../../../node_modules/markdown-it/index.mjs",
-      "file": "markdown-it.js",
-      "fileHash": "403c00dd",
-      "needsInterop": false
     },
     "@google/generative-ai": {
       "src": "../../../node_modules/@google/generative-ai/dist/index.mjs",
       "file": "@google_generative-ai.js",
-      "fileHash": "eb8c24ee",
-      "needsInterop": false
-    },
-    "marked": {
-      "src": "../../../node_modules/marked/lib/marked.esm.js",
-      "file": "marked.js",
-      "fileHash": "894509ec",
+      "fileHash": "2f56a12d",
       "needsInterop": false
     },
     "@googlemaps/js-api-loader": {
       "src": "../../../node_modules/@googlemaps/js-api-loader/dist/index.mjs",
       "file": "@googlemaps_js-api-loader.js",
-      "fileHash": "baece773",
+      "fileHash": "8230f647",
+      "needsInterop": false
+    },
+    "markdown-it": {
+      "src": "../../../node_modules/markdown-it/index.mjs",
+      "file": "markdown-it.js",
+      "fileHash": "beb3808c",
       "needsInterop": false
     }
   },
@@ -105,8 +99,8 @@
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-L6OFPWCY": {
-      "file": "chunk-L6OFPWCY.js"
+    "chunk-HKJ2B2AA": {
+      "file": "chunk-HKJ2B2AA.js"
     }
   }
 }

@@ -19,9 +19,9 @@
 - "普吉岛度假酒店"
 - "纽约自由行攻略"
 
-## 澳大利亚首都城市地图
-使用 Google Maps 展示澳大利亚的首都城市，并应用环形渐变色标记。
-<AustraliaCapitalsMap />
+## Gemini-2.0-flash联动地图
+使用 Google Maps 与Gemini联动，展示Agent能力。
+<GeminiMap />
 
 ## Gemini AI 智能搜索
 

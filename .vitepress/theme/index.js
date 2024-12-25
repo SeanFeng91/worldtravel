@@ -18,7 +18,7 @@ import ExchangeRateCalculator from '../../components/ExchangeRateCalculator.vue'
 import WeatherWidget from '../../components/WeatherWidget.vue'
 import GeminiSearchElement from '../../components/GeminiSearchElement.vue'
 import GeminiLiveChat from '../../components/GeminiLiveChat.vue'
-import AustraliaCapitalsMap from '../../components/AustraliaCapitalsMap.vue'
+import GeminiMap from '../../components/GeminiMap.vue'
 
 import './custom.css'
 
@@ -39,7 +39,7 @@ export default {
     app.component('WeatherWidget', WeatherWidget)
     app.component('GeminiSearchElement', GeminiSearchElement)
     app.component('GeminiLiveChat', GeminiLiveChat)
-    app.component('AustraliaCapitalsMap', AustraliaCapitalsMap)
+    app.component('GeminiMap', GeminiMap)
 
   },
   Layout() {
