@@ -1,14 +1,23 @@
 <template>
-  <div class="map-container">
-    <div ref="mapRef" class="map"></div>
-    <div class="controls">
-      <button 
-        @click="askAIToPlotMap"
-        :disabled="wsStatus !== 'OPEN'"
-      >
-        {{ wsStatus === 'OPEN' ? '让 AI 绘制地图' : '正在连接...' }}
-      </button>
-      <textarea v-model="aiPrompt" placeholder="输入你的地图绘制需求"></textarea>
+  <div class="container">
+    <div class="map-container">
+      <div ref="mapRef" class="map"></div>
+    </div>
+    <div class="control-panel">
+      <div class="input-group">
+        <textarea 
+          v-model="aiPrompt" 
+          placeholder="输入你的地图绘制需求"
+          class="prompt-input"
+        ></textarea>
+        <button 
+          @click="askAIToPlotMap"
+          :disabled="wsStatus !== 'OPEN'"
+          class="submit-button"
+        >
+          {{ wsStatus === 'OPEN' ? '让我们询问Gemini-2.0' : '正在连接...' }}
+        </button>
+      </div>
       <div class="connection-status">
         连接状态: {{ wsStatus }}
       </div>
@@ -217,6 +226,7 @@ const mapFns_impl = {
 
       // 处理标记
       if (Array.isArray(args.markers)) {
+        logger.value?.debug('开始处理标记数组:', args.markers)
         for (const markerStr of args.markers) {
           if (typeof markerStr !== 'string') continue
           
@@ -228,6 +238,7 @@ const mapFns_impl = {
           }
 
           const markerParts = markerStr.split('|')
+          let position = null
           
           for (const part of markerParts) {
             if (!part) continue
@@ -242,21 +253,45 @@ const mapFns_impl = {
               // 处理位置
               const point = part.split(',')
               if (point.length === 2) {
-                const marker = new google.maps.marker.AdvancedMarkerElement({
-                  position: {
-                    lat: parseFloat(point[0]),
-                    lng: parseFloat(point[1])
-                  },
-                  map: map.value,
-                  content: new google.maps.marker.PinElement({
-                    scale: markerOptions.size === 'tiny' ? 0.5 : 
-                           markerOptions.size === 'small' ? 0.75 : 1,
-                    background: markerOptions.color,
-                    glyph: markerOptions.label
-                  })
-                })
-                markers.value.push(marker)
+                position = {
+                  lat: parseFloat(point[0]),
+                  lng: parseFloat(point[1])
+                }
               }
+            }
+          }
+
+          if (position) {
+            try {
+              const marker = new google.maps.Marker({
+                position: position,
+                map: map.value,
+                title: markerOptions.label,
+                label: {
+                  text: markerOptions.label,
+                  color: '#000000',  // 黑色文字
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                },
+                // 使用 Symbol 配置来添加描边效果
+                icon: {
+                  url: `http://maps.google.com/mapfiles/ms/icons/${markerOptions.color}-dot.png`,
+                  labelOrigin: new google.maps.Point(16, -10),
+                  scaledSize: new google.maps.Size(
+                    markerOptions.size === 'tiny' ? 24 :
+                    markerOptions.size === 'small' ? 32 :
+                    markerOptions.size === 'large' ? 48 : 
+                    40,
+                    markerOptions.size === 'tiny' ? 24 :
+                    markerOptions.size === 'small' ? 32 :
+                    markerOptions.size === 'large' ? 48 : 
+                    40
+                  )
+                }
+              });
+              markers.value.push(marker);
+            } catch (error) {
+              logger.value?.error('创建标记失败:', error);
             }
           }
         }
@@ -264,26 +299,47 @@ const mapFns_impl = {
 
       // 处理普通位置标记
       if (Array.isArray(args.locations) && args.locations.length > 0) {
+        logger.value?.debug('开始处理位置数组:', args.locations)
         const bounds = new google.maps.LatLngBounds()
         
-        args.locations.forEach(loc => {
-          if (!loc || typeof loc.lat !== 'number' || typeof loc.lng !== 'number') return
+        for (const loc of args.locations) {
+          if (!loc || typeof loc.lat !== 'number' || typeof loc.lng !== 'number') continue
           
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            position: { lat: loc.lat, lng: loc.lng },
-            map: map.value,
-            title: loc.title || ''
-          })
-          markers.value.push(marker)
-          bounds.extend(marker.position)
-        })
+          try {
+            const marker = new google.maps.Marker({
+              position: { lat: loc.lat, lng: loc.lng },
+              map: map.value,
+              title: loc.title || '',
+              label: {
+                text: loc.title || '',
+                color: '#000000',  // 黑色文字
+                fontSize: '14px',
+                fontWeight: 'bold'
+              },
+              icon: {
+                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',  // 使用蓝色图标
+                scaledSize: new google.maps.Size(40, 40),  // 固定大小
+                labelOrigin: new google.maps.Point(16, -10)  // 调整标签位置
+              }
+            });
 
-        map.value.fitBounds(bounds)
-        if (args.locations.length === 1) {
-          map.value.setZoom(8)
+            markers.value.push(marker);
+            bounds.extend(marker.position);
+          } catch (error) {
+            logger.value?.error('创建位置标记失败:', error);
+          }
+        }
+
+        if (markers.value.length > 0) {
+          map.value.fitBounds(bounds);
+          if (args.locations.length === 1) {
+            map.value.setZoom(8);
+          }
         }
       }
 
+      // 在返回之前添加最终状态日志
+      logger.value?.debug('标记数组最终状态:', markers.value)
       return { string_value: 'ok' }
     } catch (error) {
       logger.value?.error('绘制地图错误:', error)
@@ -451,7 +507,7 @@ const run = async (prompt, modality = 'TEXT', tools = []) => {
 // AI 绘制地图
 const askAIToPlotMap = async () => {
   if (!aiPrompt.value) {
-    aiPrompt.value = "Plot markers on every capital city in Australia"
+    aiPrompt.value = "Plot markers on every capital city in China"
   }
 
   try {
@@ -464,13 +520,13 @@ const askAIToPlotMap = async () => {
 
 // 初始化
 onMounted(async () => {
-  logger.value = new Logger('AustraliaCapitalsMap', 'DEBUG')
+  logger.value = new Logger('GeminiMap', 'DEBUG')
   
   try {
-    // 加载 Google Maps 和 marker 库
+    // 加载 Google Maps
     await new Promise((resolve, reject) => {
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=marker,places`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
       script.async = true
       script.defer = true
       script.onload = () => {
@@ -541,10 +597,20 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
 .map-container {
   width: 100%;
   height: 600px;
   position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .map {
@@ -552,43 +618,60 @@ onUnmounted(() => {
   height: 100%;
 }
 
-.controls {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  background: white;
-  padding: 10px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-textarea {
+.control-panel {
   width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-  min-height: 80px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-button {
-  padding: 8px 16px;
+.input-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.prompt-input {
+  flex: 1;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.prompt-input:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
+}
+
+.submit-button {
+  padding: 12px 24px;
   background: #4285f4;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.2s;
 }
 
-button:disabled {
+.submit-button:hover {
+  background: #3367d6;
+}
+
+.submit-button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
 
 .connection-status {
-  margin-top: 8px;
   font-size: 12px;
   color: #666;
 }
