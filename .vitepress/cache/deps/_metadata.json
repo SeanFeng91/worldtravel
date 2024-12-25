@@ -2,90 +2,96 @@
   "hash": "a9d86611",
   "configHash": "7a7aa69f",
   "lockfileHash": "0df8d3d6",
-  "browserHash": "8164b2ea",
+  "browserHash": "9f81376a",
   "optimized": {
     "vue": {
       "src": "../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "6eb0e16f",
+      "fileHash": "885ac97f",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "29c05d4f",
+      "fileHash": "c36599a8",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "e243a343",
+      "fileHash": "3e73a54b",
       "needsInterop": false
     },
     "leaflet": {
       "src": "../../../node_modules/leaflet/dist/leaflet-src.js",
       "file": "leaflet.js",
-      "fileHash": "53d15bd9",
+      "fileHash": "8e9f7777",
       "needsInterop": true
     },
     "@braintree/sanitize-url": {
       "src": "../../../node_modules/@braintree/sanitize-url/dist/index.js",
       "file": "@braintree_sanitize-url.js",
-      "fileHash": "3412e371",
+      "fileHash": "8586a170",
       "needsInterop": true
     },
     "dayjs": {
       "src": "../../../node_modules/dayjs/dayjs.min.js",
       "file": "dayjs.js",
-      "fileHash": "07aa64c8",
+      "fileHash": "7ea0924d",
       "needsInterop": true
     },
     "debug": {
       "src": "../../../node_modules/debug/src/browser.js",
       "file": "debug.js",
-      "fileHash": "7f32f68a",
+      "fileHash": "6a6cb26f",
       "needsInterop": true
     },
     "cytoscape-cose-bilkent": {
       "src": "../../../node_modules/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js",
       "file": "cytoscape-cose-bilkent.js",
-      "fileHash": "f205e029",
+      "fileHash": "50585af6",
       "needsInterop": true
     },
     "cytoscape": {
       "src": "../../../node_modules/cytoscape/dist/cytoscape.esm.mjs",
       "file": "cytoscape.js",
-      "fileHash": "7b2f69c6",
+      "fileHash": "3e42e5cc",
       "needsInterop": false
     },
     "mapbox-gl": {
       "src": "../../../node_modules/mapbox-gl/dist/mapbox-gl.js",
       "file": "mapbox-gl.js",
-      "fileHash": "9636a7e8",
+      "fileHash": "bdb891a9",
       "needsInterop": true
     },
     "axios": {
       "src": "../../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "b4dae54c",
+      "fileHash": "e4a46005",
       "needsInterop": false
     },
     "lodash/debounce": {
       "src": "../../../node_modules/lodash/debounce.js",
       "file": "lodash_debounce.js",
-      "fileHash": "81575795",
+      "fileHash": "4e302aad",
       "needsInterop": true
     },
     "@google/generative-ai": {
       "src": "../../../node_modules/@google/generative-ai/dist/index.mjs",
       "file": "@google_generative-ai.js",
-      "fileHash": "db3eba2c",
+      "fileHash": "d61d9503",
       "needsInterop": false
     },
     "markdown-it": {
       "src": "../../../node_modules/markdown-it/index.mjs",
       "file": "markdown-it.js",
-      "fileHash": "9cd09765",
+      "fileHash": "736a33f2",
+      "needsInterop": false
+    },
+    "marked": {
+      "src": "../../../node_modules/marked/lib/marked.esm.js",
+      "file": "marked.js",
+      "fileHash": "1f7c8b79",
       "needsInterop": false
     }
   },
@@ -93,8 +99,8 @@
     "chunk-THPMFJZZ": {
       "file": "chunk-THPMFJZZ.js"
     },
-    "chunk-HKJ2B2AA": {
-      "file": "chunk-HKJ2B2AA.js"
+    "chunk-L6OFPWCY": {
+      "file": "chunk-L6OFPWCY.js"
     }
   }
 }

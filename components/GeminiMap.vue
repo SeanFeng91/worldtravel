@@ -4,19 +4,39 @@
       <div ref="mapRef" class="map"></div>
     </div>
     <div class="control-panel">
+      <div class="chat-history" ref="chatHistoryRef">
+        <div v-for="(message, index) in chatHistory" :key="index" 
+             :class="['message', message.role]">
+          <div v-if="message.role === 'assistant'" 
+               v-html="marked.parse(message.content)">
+          </div>
+          <div v-else>
+            {{ message.content }}
+          </div>
+        </div>
+      </div>
       <div class="input-group">
         <textarea 
           v-model="aiPrompt" 
           placeholder="输入你的地图绘制需求"
           class="prompt-input"
+          @keydown.enter.prevent="handleEnterKey"
         ></textarea>
-        <button 
-          @click="askAIToPlotMap"
-          :disabled="wsStatus !== 'OPEN'"
-          class="submit-button"
-        >
-          {{ wsStatus === 'OPEN' ? '让我们询问Gemini-2.0' : '正在连接...' }}
-        </button>
+        <div class="buttons">
+          <button 
+            @click="askAIToPlotMap"
+            :disabled="wsStatus !== 'OPEN'"
+            class="submit-button"
+          >
+            {{ wsStatus === 'OPEN' ? '发送' : '正在连接...' }}
+          </button>
+          <button 
+            @click="startNewMap"
+            class="new-map-button"
+          >
+            新地图
+          </button>
+        </div>
       </div>
       <div class="connection-status">
         连接状态: {{ wsStatus }}
@@ -26,7 +46,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { marked } from 'marked'
 
 // 添加 Logger 类定义
 class Logger {
@@ -80,6 +101,12 @@ const MAX_RECONNECT_ATTEMPTS = 3
 const RECONNECT_DELAY = 2000
 let google = null
 let ws = null
+
+// 添加聊天历史记录状态
+const chatHistory = ref([])
+
+// 添加聊天历史的引用
+const chatHistoryRef = ref(null)
 
 // 修改地图函数声明
 const mapFns = [
@@ -387,12 +414,25 @@ const setup = async (ws, modality = 'TEXT', tools = []) => {
 
 // 发送消息
 const send = async (ws, prompt) => {
+  // 构建完整的对话历史
+  const turns = chatHistory.value.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }))
+  
+  // 添加当前用户的新消息
+  turns.push({
+    role: 'user',
+    parts: [{ text: prompt }]
+  })
+
   const msg = {
     client_content: {
-      turns: [{ role: "user", parts: [{ text: prompt }] }],
+      turns: turns,  // 发送完整的对话历史
       turn_complete: true
     }
   }
+  
   logger.value?.debug('发送消息:', msg)
   ws.send(JSON.stringify(msg))
 }
@@ -402,15 +442,41 @@ const handleServerContent = (serverContent) => {
   let audio = false
   const modelTurn = serverContent.modelTurn
   if (modelTurn) {
-    const text = modelTurn.parts?.[0]?.text
+    let text = modelTurn.parts?.[0]?.text
     if (text) {
-      logger.value?.info('AI 说:', text)
+      // 处理文本格式
+      text = text
+        // 移除句子开头的逗号和空格
+        .replace(/^[,，]\s*/g, '')
+        // 合并多余的空行
+        .replace(/\n\s*\n/g, '\n')
+        // 合并被截断的句子（不是在标点符号后的换行）
+        .replace(/([^。！？：、，\n])\n/g, '$1')
+        // 确保列表项保持换行
+        .replace(/^[•\-*]\s*/gm, '\n• ')
+        // 移除末尾多余的换行
+        .trim()
+
+      // 如果已经有助手的消息，就更新最后一条；否则创建新的
+      if (chatHistory.value.length > 0 && 
+          chatHistory.value[chatHistory.value.length - 1].role === 'assistant') {
+        chatHistory.value[chatHistory.value.length - 1].content += text
+      } else {
+        chatHistory.value.push({
+          role: 'assistant',
+          content: text
+        })
+      }
+      
+      logger.value?.debug('当前AI回复:', chatHistory.value[chatHistory.value.length - 1].content)
+      
+      // 在更新消息后滚动
+      scrollToBottom()
     }
 
     const inlineData = modelTurn.parts?.[0]?.inlineData
     if (inlineData) {
       const b64data = inlineData.data
-      // 这里可以处理音频数据
       audio = true
     }
   }
@@ -504,17 +570,90 @@ const run = async (prompt, modality = 'TEXT', tools = []) => {
   })
 }
 
+// 添加自动滚动函数
+const scrollToBottom = () => {
+  if (chatHistoryRef.value) {
+    nextTick(() => {
+      chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight
+    })
+  }
+}
+
+// 添加回车键处理函数
+const handleEnterKey = (e) => {
+  // 如果按下 Shift + Enter，则插入换行
+  if (e.shiftKey) {
+    return
+  }
+  // 如果内容为空，不提交
+  if (!aiPrompt.value.trim()) {
+    return
+  }
+  // 提交内容
+  askAIToPlotMap()
+}
+
 // AI 绘制地图
 const askAIToPlotMap = async () => {
-  if (!aiPrompt.value) {
-    aiPrompt.value = "Plot markers on every capital city in China"
-  }
+  if (!aiPrompt.value) return
+  
+  chatHistory.value.push({
+    role: 'user',
+    content: aiPrompt.value
+  })
+  
+  // 添加滚动
+  scrollToBottom()
 
   try {
     await run(aiPrompt.value, 'TEXT', [{ functionDeclarations: mapFns }])
+    aiPrompt.value = ''
   } catch (error) {
     logger.value?.error('AI 绘制地图失败:', error)
-    alert('绘制地图失败: ' + error.message)
+    chatHistory.value.push({
+      role: 'error',
+      content: '绘制地图失败: ' + error.message
+    })
+    // 错误消息也需要滚动
+    scrollToBottom()
+  }
+}
+
+// 添加开始新地图的函数
+const startNewMap = () => {
+  // 清除所有标记
+  markers.value.forEach(marker => {
+    marker.setMap(null)  // 从地图上移除标记
+  })
+  markers.value = []     // 清空标记数组
+  
+  // 清除所有路径
+  if (window.currentPath) {
+    window.currentPath.setMap(null)
+    window.currentPath = null
+  }
+  
+  // 清除所有多边形（如果有的话）
+  if (window.currentPolygon) {
+    window.currentPolygon.setMap(null)
+    window.currentPolygon = null
+  }
+  
+  // 重置地图视图到中国中心
+  if (map.value) {
+    map.value.setCenter({ lat: 35.8617, lng: 104.1954 })  // 中国中心位置
+    map.value.setZoom(4)  // 适合查看整个中国的缩放级别
+  }
+  
+  // 清空聊天历史
+  chatHistory.value = []
+  
+  // 清空输入框
+  aiPrompt.value = ''
+  
+  // 重置其他可能的状态
+  if (window.google && window.google.maps) {
+    window.google.maps.event.trigger(map.value, 'resize')
   }
 }
 
@@ -594,6 +733,12 @@ onUnmounted(() => {
     ws.close()
   }
 })
+
+// 配置 marked 选项
+marked.setOptions({
+  breaks: true,  // 将换行符转换为 <br>
+  gfm: true      // 启用 GitHub 风格的 Markdown
+});
 </script>
 
 <style scoped>
@@ -673,6 +818,120 @@ onUnmounted(() => {
 
 .connection-status {
   font-size: 12px;
+  color: #666;
+}
+
+.chat-history {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.message {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  max-width: 80%;
+}
+
+.message.user {
+  background: #e3f2fd;
+  margin-left: auto;
+}
+
+.message.assistant {
+  background: #f5f5f5;
+  margin-right: auto;
+}
+
+.message.error {
+  background: #ffebee;
+  color: #c62828;
+  margin-right: auto;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.new-map-button {
+  padding: 12px 24px;
+  background: #34a853;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.new-map-button:hover {
+  background: #2d8e47;
+}
+
+.control-panel {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* 添加 Markdown 样式 */
+.message.assistant :deep(p) {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.message.assistant :deep(code) {
+  background-color: #f0f0f0;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.message.assistant :deep(pre) {
+  background-color: #f6f8fa;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.message.assistant :deep(ul), 
+.message.assistant :deep(ol) {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.message.assistant :deep(li) {
+  margin: 0.3em 0;
+}
+
+.message.assistant :deep(br) {
+  content: "";
+  display: block;
+  margin: 0.3em 0;
+}
+
+.message.assistant :deep(table) {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+}
+
+.message.assistant :deep(th),
+.message.assistant :deep(td) {
+  border: 1px solid #ddd;
+  padding: 0.5em;
+}
+
+.message.assistant :deep(blockquote) {
+  border-left: 4px solid #ddd;
+  margin: 0.5em 0;
+  padding-left: 1em;
   color: #666;
 }
 </style>

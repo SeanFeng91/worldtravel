@@ -21,6 +21,9 @@
 
 ## Gemini-2.0-flash联动地图
 使用 Google Maps 与Gemini联动，展示Agent能力。
+- 实现了于Gemini的连续对话
+- 可以结合对话的内容在地图上绘制相应的地点
+- 
 <GeminiMap />
 
 ## Gemini AI 智能搜索
