@@ -7,13 +7,31 @@
         </button>
         <label class="search-toggle">
           <input type="checkbox" v-model="searchEnabled">
-          启用搜索
+          <span class="search-label">启用搜索</span>
+          <span class="search-tooltip">启用后可以获取实时网络信息</span>
         </label>
       </div>
 
       <div class="chat-history scroll-container" ref="chatContainer">
+        <div v-if="currentChat.messages.length === 0" class="welcome-message">
+          <h2>👋 欢迎使用 Gemini AI 助手</h2>
+          <div class="suggestions">
+            <p>您可以尝试以下问题：</p>
+            <ul>
+              <li>📝 帮我写一段Python代码</li>
+              <li>🔍 查询一下今天北京到杭州的机票情况</li>
+              <li>💡 帮我规划一段3天东京自由行行程</li>
+              <li>📚 查询今天的天气</li>
+            </ul>
+          </div>
+        </div>
+
         <div v-for="(msg, index) in currentChat.messages" :key="index" 
              :class="['message', msg.role]">
+          <div class="message-header">
+            <span class="role-icon">{{ msg.role === 'user' ? '👤' : '🤖' }}</span>
+            <span class="role-name">{{ msg.role === 'user' ? '您' : 'AI 助手' }}</span>
+          </div>
           <div class="message-content" 
                v-html="renderMarkdown(msg.content)"
                :class="{ 'markdown-body': msg.role === 'assistant' }">
@@ -24,12 +42,13 @@
       <div class="input-area">
         <textarea 
           v-model="userInput"
-          placeholder="输入您的问题..."
+          placeholder="输入您的问题... (Ctrl + Enter 快速发送)"
           @keyup.enter.ctrl="handleSend"
         ></textarea>
         <div class="controls">
-          <button @click="handleSend" :disabled="isLoading">
-            {{ isLoading ? '发送中...' : '发送' }}
+          <button @click="handleSend" :disabled="isLoading" class="send-btn">
+            <span class="btn-icon">{{ isLoading ? '⏳' : '📤' }}</span>
+            <span class="btn-text">{{ isLoading ? '发送中...' : '发送' }}</span>
           </button>
         </div>
       </div>
@@ -158,6 +177,9 @@ watch(() => currentChat.value.messages.length, async () => {
   margin: 0 auto;
   padding: 20px;
   height: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chat-container {
@@ -165,31 +187,37 @@ watch(() => currentChat.value.messages.length, async () => {
   flex-direction: column;
   gap: 20px;
   height: calc(100vh - 100px);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
 }
 
 .new-chat-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   padding: 8px 16px;
   background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
 }
 
 .new-chat-btn:hover {
   background: #45a049;
+  transform: translateY(-1px);
 }
 
 .new-chat-btn .icon {
@@ -197,490 +225,194 @@ watch(() => currentChat.value.messages.length, async () => {
   font-weight: bold;
 }
 
-.scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 10px;
-  margin-bottom: 20px;
-  max-height: calc(100vh - 280px);
-}
-
-.scroll-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.input-area {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 10px 0;
-  border-top: 1px solid #eee;
-}
-
-.message {
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-.message.user {
-  background: #e3f2fd;
-  margin-left: 20%;
-}
-
-.message.assistant {
-  background: #f5f5f5;
-  margin-right: 20%;
-}
-
-.message.error {
-  background: #ffebee;
-  color: #c62828;
-}
-
-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background: #007AFF;
-  color: white;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #ccc;
-}
-
 .search-toggle {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  position: relative;
   cursor: pointer;
 }
 
-/* 添加 Markdown 内容样式 */
-.markdown-body :deep(p) {
-  margin: 0.5em 0;
-}
-
-.markdown-body :deep(pre) {
-  background: #f6f8fa;
-  padding: 1em;
-  border-radius: 4px;
-  overflow-x: auto;
-}<template>
-  <div class="enhanced-gemini">
-    <div class="chat-container">
-      <div class="toolbar">
-        <button @click="startNewChat" class="new-chat-btn">
-          <span class="icon">+</span> 新话题
-        </button>
-        <label class="search-toggle">
-          <input type="checkbox" v-model="searchEnabled">
-          启用搜索
-        </label>
-      </div>
-
-      <div class="chat-history scroll-container" ref="chatContainer">
-        <div v-for="(msg, index) in currentChat.messages" :key="index" 
-             :class="['message', msg.role]">
-          <div class="message-content" 
-               v-html="renderMarkdown(msg.content)"
-               :class="{ 'markdown-body': msg.role === 'assistant' }">
-          </div>
-        </div>
-      </div>
-      
-      <div class="input-area">
-        <textarea 
-          v-model="userInput"
-          placeholder="输入您的问题..."
-          @keyup.enter.ctrl="handleSend"
-        ></textarea>
-        <div class="controls">
-          <button @click="handleSend" :disabled="isLoading">
-            {{ isLoading ? '发送中...' : '发送' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup>
-import { ref, watch, nextTick } from 'vue'
-import MarkdownIt from 'markdown-it'
-
-const md = new MarkdownIt({
-  html: true,
-  breaks: true,
-  linkify: true,
-  typographer: true,
-  highlight: function (str, lang) {
-    return `<pre class="language-${lang}"><code>${str}</code></pre>`
-  }
-})
-
-// 添加 renderMarkdown 函数
-const renderMarkdown = (text) => {
-  if (!text) return ''
-  try {
-    return md.render(text)
-  } catch (error) {
-    console.error('Markdown rendering error:', error)
-    return text
-  }
-}
-
-// 对话历史结构
-const chats = ref([{
-  id: Date.now(),
-  messages: []
-}])
-
-// 当前对话
-const currentChat = ref(chats.value[0])
-
-// 其他状态
-const isLoading = ref(false)
-const userInput = ref('')
-const searchEnabled = ref(false)
-const chatContainer = ref(null)
-
-// 开始新对话
-const startNewChat = () => {
-  const newChat = {
-    id: Date.now(),
-    messages: []
-  }
-  chats.value.push(newChat)
-  currentChat.value = newChat
-  userInput.value = ''
-}
-
-// 发送消息
-const handleSend = async () => {
-  if (!userInput.value.trim() || isLoading.value) return
-  
-  isLoading.value = true
-  const prompt = userInput.value
-  userInput.value = ''
-
-  try {
-    // 添加用户消息到当前对话
-    currentChat.value.messages.push({
-      role: 'user',
-      content: prompt
-    })
-
-    // 构建包含历史记录的请求
-    const messages = currentChat.value.messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
-      parts: [{ text: msg.content }]
-    }))
-
-    const response = await fetch('https://gemini-worker.fengyx91.workers.dev/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt,
-        model: 'gemini-2.0-flash-exp',
-        searchEnabled: searchEnabled.value,
-        messages: messages // 添加历史消息
-      })
-    })
-
-    const result = await response.json()
-    console.log('API Response:', result)
-
-    if (!result.success) {
-      throw new Error(result.error || '请求失败')
-    }
-
-    const aiResponse = result.data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (aiResponse) {
-      currentChat.value.messages.push({
-        role: 'assistant',
-        content: aiResponse
-      })
-    } else {
-      throw new Error('返回数据格式不正确')
-    }
-
-  } catch (error) {
-    console.error('生成回答失败:', error)
-    currentChat.value.messages.push({
-      role: 'error',
-      content: '抱歉，生成回答时出现错误：' + error.message
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// 自动滚动到底部
-watch(() => currentChat.value.messages.length, async () => {
-  await nextTick()
-  const container = chatContainer.value
-  if (container) {
-    container.scrollTop = container.scrollHeight
-  }
-})
-</script>
-
-<style scoped>
-.enhanced-gemini {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  height: 100%;
-}
-
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  height: calc(100vh - 100px);
-}
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.new-chat-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 16px;
-  background: #4CAF50;
+.search-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #333;
   color: white;
-  border: none;
+  padding: 6px 12px;
   border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-.new-chat-btn:hover {
-  background: #45a049;
+.search-toggle:hover .search-tooltip {
+  opacity: 1;
 }
 
-.new-chat-btn .icon {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 10px;
-  margin-bottom: 20px;
-  max-height: calc(100vh - 280px);
-}
-
-.scroll-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.input-area {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 10px 0;
-  border-top: 1px solid #eee;
-}
-
-.message {
-  margin: 10px 0;
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.message.user {
-  background: #e3f2fd;
-  margin-left: 20%;
-}
-
-.message.assistant {
-  background: #f5f5f5;
-  margin-right: 20%;
-}
-
-.message.error {
-  background: #ffebee;
-  color: #c62828;
-}
-
-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background: #007AFF;
-  color: white;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #ccc;
-}
-
-.search-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-/* 添加 Markdown 内容样式 */
-.markdown-body :deep(p) {
-  margin: 0.8em 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.markdown-body :deep(pre) {
-  background: #f6f8fa;
-  padding: 1em;
-  border-radius: 4px;
-  overflow-x: auto;
-  max-width: 100%;
-  white-space: pre;
-}
-
-.markdown-body :deep(code) {
-  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
-  font-size: 0.9em;
-  background: #f6f8fa;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.markdown-body :deep(ul), 
-.markdown-body :deep(ol) {
-  padding-left: 2em;
-  margin: 0.5em 0;
-}
-
-.markdown-body :deep(blockquote) {
-  margin: 0.5em 0;
-  padding-left: 1em;
-  border-left: 4px solid #ddd;
+.welcome-message {
+  text-align: center;
+  padding: 40px 20px;
   color: #666;
 }
 
-.message-content {
+.suggestions {
+  margin-top: 20px;
+  text-align: left;
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+.suggestions ul {
+  list-style: none;
+  padding: 0;
+}
+
+.suggestions li {
+  margin: 10px 0;
+  padding: 10px;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.suggestions li:hover {
+  background: #f0f0f0;
+  transform: translateX(5px);
+}
+
+.message {
+  margin: 10px 20px;
+  padding: 15px;
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+  background: #e3f2fd;
+  margin-left: 60px;
+  border: 1px solid #bbdefb;
+}
+
+.message.assistant {
+  background: #fff;
+  margin-right: 60px;
+  border: 1px solid #e0e0e0;
+}
+
+.message.error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.role-icon {
+  font-size: 18px;
+}
+
+.input-area {
+  padding: 20px;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0 0 8px 8px;
+}
+
+textarea {
   width: 100%;
-  overflow-x: auto;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-size: 14px;
+  transition: border-color 0.3s;
 }
 
-.markdown-body :deep(pre) code {
-  counter-reset: line;
+textarea:focus {
+  border-color: #4CAF50;
+  outline: none;
 }
 
-.markdown-body :deep(pre) code > span {
-  display: block;
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
-.markdown-body :deep(pre) code > span:before {
-  counter-increment: line;
-  content: counter(line);
-  display: inline-block;
-  padding: 0 .5em;
-  margin-right: .5em;
-  color: #888;
-  border-right: 1px solid #ddd;
+.send-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* 滚动条样式 */
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 添加 Markdown 内容样式 */
+.markdown-body :deep(p) {
+  margin: 0.5em 0;
 }
 
 .markdown-body :deep(pre) {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-}
-
-.markdown-body :deep(table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1em 0;
-}
-
-.markdown-body :deep(th),
-.markdown-body :deep(td) {
-  padding: 8px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.markdown-body :deep(th) {
   background: #f6f8fa;
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
 }
-</style> 
 
 .markdown-body :deep(code) {
   font-family: monospace;
