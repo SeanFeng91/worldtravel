@@ -13,11 +13,11 @@ export default {
     }
 
     try {
-      const { prompt, model, searchEnabled } = await request.json();
+      const { prompt, model, searchEnabled, messages } = await request.json();
 
       // 创建请求结构
       const requestBody = {
-        contents: [{
+        contents: messages || [{
           parts: [{
             text: prompt
           }]
