@@ -302,7 +302,7 @@ const mapFns_impl = {
                 },
                 // 使用 Symbol 配置来添加描边效果
                 icon: {
-                  url: `http://maps.google.com/mapfiles/ms/icons/${markerOptions.color}-dot.png`,
+                  url: `https://maps.google.com/mapfiles/ms/icons/${markerOptions.color}-dot.png`,
                   labelOrigin: new google.maps.Point(16, -10),
                   scaledSize: new google.maps.Size(
                     markerOptions.size === 'tiny' ? 24 :
@@ -344,9 +344,9 @@ const mapFns_impl = {
                 fontWeight: 'bold'
               },
               icon: {
-                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',  // 使用蓝色图标
-                scaledSize: new google.maps.Size(40, 40),  // 固定大小
-                labelOrigin: new google.maps.Point(16, -10)  // 调整标签位置
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',  // 修改为 HTTPS
+                scaledSize: new google.maps.Size(40, 40),
+                labelOrigin: new google.maps.Point(16, -10)
               }
             });
 

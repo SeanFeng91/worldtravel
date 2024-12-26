@@ -19,6 +19,7 @@ import WeatherWidget from '../../components/WeatherWidget.vue'
 import GeminiSearchElement from '../../components/GeminiSearchElement.vue'
 import GeminiLiveChat from '../../components/GeminiLiveChat.vue'
 import GeminiMap from '../../components/GeminiMap.vue'
+import EnhancedGeminiAI from '../../components/EnhancedGeminiAI.vue'
 
 import './custom.css'
 
@@ -40,7 +41,7 @@ export default {
     app.component('GeminiSearchElement', GeminiSearchElement)
     app.component('GeminiLiveChat', GeminiLiveChat)
     app.component('GeminiMap', GeminiMap)
-
+    app.component('EnhancedGeminiAI', EnhancedGeminiAI)
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {

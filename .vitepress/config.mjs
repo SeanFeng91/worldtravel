@@ -104,6 +104,7 @@ export default withMermaid(defineConfig({
           text: '实用工具',
           items: [
             { text: 'Google 旅游搜索', link: '/tools/google-tools' },
+            { text: 'Gemini-2.0-flash', link: '/tools/GoogleSDK' },
             {text:'旅行规划助手',link:'/tools/travel-agent'},
             { text: '预算计算器', link: '/tools/budget-calculator' },
             { text: '行程规划', link: '/tools/itinerary-planner' },
