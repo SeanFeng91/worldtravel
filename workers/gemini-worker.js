@@ -114,6 +114,7 @@ export default {
 
       console.log('Using AI settings:', validatedSettings);
 
+      // 构建消息内容
       const contents = messages.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{
@@ -121,21 +122,17 @@ export default {
         }]
       }));
 
-      // 添加系统提示来平衡地图功能和详细回答
+      // 添加更好的系统提示
       if (mapEnabled) {
         contents.unshift({
           role: 'user',
           parts: [{
-            text: `你有地图工具可以使用。在提供详细建议和信息的同时，可以在需要展示位置时使用 draw_map 函数。请确保回答全面且详细，不要仅仅因为有地图功能就简化回答。`
-          }]
-        });
-      }
-
-      if (!contents.length) {
-        contents.push({
-          role: 'user',
-          parts: [{
-            text: prompt
+            text: `你是一个旅游助手。请先用文字详细回答用户的问题，然后在需要时使用 draw_map 函数来展示位置。
+            例如：
+            1. 先描述这个地方的特点和信息
+            2. 再使用地图展示位置
+            3. 如果涉及多个地点，可以都标记在地图上
+            请确保回答既有信息性又有帮助性。`
           }]
         });
       }
@@ -153,14 +150,14 @@ export default {
       if (mapEnabled || searchEnabled) {
         requestBody.tools = [];
         
+        if (mapEnabled) {
+          requestBody.tools.push(mapTools);
+        }
+        
         if (searchEnabled) {
           requestBody.tools.push({
             'google_search': {}
           });
-        }
-        
-        if (mapEnabled) {
-          requestBody.tools.push(mapTools);
         }
       }
 
@@ -182,49 +179,38 @@ export default {
         throw new Error(`API Error: ${data.error.message}`);
       }
 
-      // 检查并提取文本内容
-      const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!textContent && !data.candidates?.[0]?.content?.parts) {
-        throw new Error('No text content in response');
-      }
-
-      // 构建响应数据
+      // 改进响应处理
       const responseData = {
         success: true,
-        data: {
-          candidates: [{
-            content: {
-              parts: data.candidates[0].content.parts
-            }
-          }]
-        },
-        usedSettings: validatedSettings,
-        tokenUsage: data.usageMetadata
+        data: data,
+        toolResults: []
       };
 
-      // 检查工具调用
+      // 处理文本和工具调用
       if (data.candidates?.[0]?.content?.parts) {
-        console.log('Checking for tool calls in parts:', data.candidates[0].content.parts);
-        
-        const toolCalls = data.candidates[0].content.parts
-          .filter(part => part.functionCall)
-          .map(part => ({
-            functionCall: {
-              name: part.functionCall.name,
-              args: part.functionCall.args
-            }
-          }));
+        const parts = data.candidates[0].content.parts;
+        const textParts = [];
+        const toolCalls = [];
 
-        console.log('Found tool calls:', toolCalls);
-
-        if (toolCalls.length > 0) {
-          console.log('Processing tool calls...');
-          const toolResults = await handleToolCalls(toolCalls, env);
-          if (toolResults.length > 0) {
-            console.log('Tool results:', toolResults);
-            responseData.toolResults = toolResults;
+        // 分离文本和工具调用
+        parts.forEach(part => {
+          if (part.text) {
+            textParts.push(part.text);
           }
+          if (part.functionCall) {
+            toolCalls.push(part);
+          }
+        });
+
+        // 处理工具调用
+        if (toolCalls.length > 0) {
+          responseData.toolResults = await handleToolCalls(toolCalls, env);
         }
+
+        // 合并文本响应
+        responseData.data.candidates[0].content.parts = [{
+          text: textParts.join('\n')
+        }];
       }
 
       console.log('Final response:', responseData);

@@ -206,13 +206,11 @@ const handleSend = async () => {
   userInput.value = '';
 
   try {
-    // 添加用户消息到当前对话
+    // 添加用户消息
     currentChat.value.messages.push({
       role: 'user',
       content: prompt
     });
-
-    console.log('Sending request with map enabled:', mapEnabled.value);
 
     const response = await fetch(import.meta.env.VITE_WORKER_URL, {
       method: 'POST',
@@ -236,30 +234,14 @@ const handleSend = async () => {
       throw new Error(result.error || '请求失败');
     }
 
-    // 提取 AI 响应文本和工具调用
-    const parts = result.data?.candidates?.[0]?.content?.parts || [];
-    console.log('Response parts:', parts);
-
-    let aiResponse = '';
-    const toolResults = result.toolResults || [];
-
-    // 处理所有部分
-    for (const part of parts) {
-      if (part.text) {
-        aiResponse += part.text;
-      }
-      // 工具调用部分会在 toolResults 中处理
-    }
-
-    if (!aiResponse && !toolResults.length) {
-      throw new Error('无有效的响应内容');
-    }
+    // 提取 AI 响应文本
+    const aiResponse = result.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // 添加响应到消息列表
     currentChat.value.messages.push({
       role: 'assistant',
-      content: aiResponse || '我已经处理了您的请求，请查看地图显示。',
-      maps: toolResults
+      content: aiResponse,
+      maps: result.toolResults || []
     });
 
   } catch (error) {
