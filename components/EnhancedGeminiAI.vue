@@ -5,11 +5,55 @@
         <button @click="startNewChat" class="new-chat-btn">
           <span class="icon">+</span> 新话题
         </button>
+        
+        <button @click="showSettings = !showSettings" class="settings-btn">
+          <span class="icon">⚙️</span> 参数设置
+        </button>
+
         <label class="search-toggle">
           <input type="checkbox" v-model="searchEnabled">
           <span class="search-label">启用搜索</span>
           <span class="search-tooltip">启用后可以获取实时网络信息</span>
         </label>
+      </div>
+
+      <div v-if="showSettings" class="settings-panel">
+        <div class="setting-item">
+          <label>创造性 (Temperature)</label>
+          <div class="slider-container">
+            <input type="range" v-model="aiSettings.temperature" min="0" max="1" step="0.1">
+            <span class="value">{{ aiSettings.temperature }}</span>
+          </div>
+          <div class="setting-desc">控制回答的创造性和随机性 (0.0-1.0)</div>
+        </div>
+
+        <div class="setting-item">
+          <label>词汇多样性 (Top K)</label>
+          <div class="slider-container">
+            <input type="range" v-model="aiSettings.topK" min="1" max="100" step="1">
+            <span class="value">{{ aiSettings.topK }}</span>
+          </div>
+          <div class="setting-desc">控制词汇选择范围 (1-100)</div>
+        </div>
+
+        <div class="setting-item">
+          <label>输出概率阈值 (Top P)</label>
+          <div class="slider-container">
+            <input type="range" v-model="aiSettings.topP" min="0" max="1" step="0.05">
+            <span class="value">{{ aiSettings.topP }}</span>
+          </div>
+          <div class="setting-desc">控制输出的确定性 (0.0-1.0)</div>
+        </div>
+
+        <div class="setting-item">
+          <label>最大输出长度</label>
+          <div class="slider-container">
+            <input type="range" v-model="aiSettings.maxOutputTokens" 
+                   min="1000" max="8192" step="1000">
+            <span class="value">{{ aiSettings.maxOutputTokens }}</span>
+          </div>
+          <div class="setting-desc">控制回答的最大长度 (1000-8192)</div>
+        </div>
       </div>
 
       <div class="chat-history scroll-container" ref="chatContainer">
@@ -18,10 +62,18 @@
           <div class="suggestions">
             <p>您可以尝试以下问题：</p>
             <ul>
-              <li>📝 帮我写一段Python代码</li>
-              <li>🔍 查询一下今天北京到杭州的机票情况</li>
-              <li>💡 帮我规划一段3天东京自由行行程</li>
-              <li>📚 查询今天的天气</li>
+              <li @click="sendSuggestion('帮我写一段贪吃蛇的Python代码')">
+                📝 帮我写一段Python代码
+              </li>
+              <li @click="sendSuggestion('帮我查一下今天北京到杭州的机票情况')">
+                🔍 解释一下什么是人工智能
+              </li>
+              <li @click="sendSuggestion('帮我规划一段3天东京自由行行程')">
+                💡 帮我规划一段3天东京自由行行程
+              </li>
+              <li @click="sendSuggestion('北京今天的天气情况如何')">
+                📚 如何学习编程？
+              </li>
             </ul>
           </div>
         </div>
@@ -88,6 +140,15 @@ const userInput = ref('')
 const searchEnabled = ref(false)
 const chatContainer = ref(null)
 
+// AI 参数设置
+const showSettings = ref(false)
+const aiSettings = ref({
+  temperature: 0.3,
+  topK: 40,
+  topP: 0.95,
+  maxOutputTokens: 8192
+})
+
 // 开始新对话
 const startNewChat = () => {
   const newChat = {
@@ -129,7 +190,8 @@ const handleSend = async () => {
         prompt,
         model: 'gemini-2.0-flash-exp',
         searchEnabled: searchEnabled.value,
-        messages: messages // 添加历史消息
+        messages: messages,
+        settings: aiSettings.value  // 添加参数设置
       })
     })
 
@@ -169,6 +231,12 @@ watch(() => currentChat.value.messages.length, async () => {
     container.scrollTop = container.scrollHeight
   }
 })
+
+// 添加发送建议问题的方法
+const sendSuggestion = (question) => {
+  userInput.value = question;
+  handleSend();
+};
 </script>
 
 <style scoped>
@@ -271,16 +339,19 @@ watch(() => currentChat.value.messages.length, async () => {
 
 .suggestions li {
   margin: 10px 0;
-  padding: 10px;
+  padding: 10px 15px;
   background: #fff;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
 }
 
 .suggestions li:hover {
   background: #f0f0f0;
   transform: translateX(5px);
+  border-color: #4CAF50;
+  color: #4CAF50;
 }
 
 .message {
@@ -432,5 +503,73 @@ textarea:focus {
   padding-left: 1em;
   border-left: 4px solid #ddd;
   color: #666;
+}
+
+/* 添加新样式 */
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.settings-btn:hover {
+  background: #555;
+  transform: translateY(-1px);
+}
+
+.settings-panel {
+  padding: 15px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  animation: slideDown 0.3s ease;
+}
+
+.setting-item {
+  margin: 10px 0;
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider-container .value {
+  min-width: 40px;
+  text-align: right;
+  color: #666;
+}
+
+.setting-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style> 

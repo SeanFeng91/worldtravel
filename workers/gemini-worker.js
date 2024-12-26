@@ -13,9 +13,18 @@ export default {
     }
 
     try {
-      const { prompt, model, searchEnabled, messages } = await request.json();
+      const { prompt, model, searchEnabled, messages, settings } = await request.json();
 
-      // 修正消息格式
+      // 验证和规范化设置参数
+      const validatedSettings = {
+        temperature: Math.max(0, Math.min(1, settings?.temperature ?? 0.3)),
+        topK: Math.max(1, Math.min(40, settings?.topK ?? 40)),
+        topP: Math.max(0, Math.min(1, settings?.topP ?? 0.95)),
+        maxOutputTokens: Math.max(1000, Math.min(8192, settings?.maxOutputTokens ?? 8192))
+      };
+
+      console.log('Using AI settings:', validatedSettings);
+
       const contents = messages.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{
@@ -23,7 +32,6 @@ export default {
         }]
       }));
 
-      // 如果没有历史消息，使用当前提示
       if (!contents.length) {
         contents.push({
           role: 'user',
@@ -33,14 +41,12 @@ export default {
         });
       }
 
-      // 创建请求结构
       const requestBody = {
         contents,
         generationConfig: {
-          temperature: 0.3,    // 控制创造性/随机性
-          topK: 40,           // 控制词汇多样性
-          topP: 0.95,         // 控制输出概率阈值
-          maxOutputTokens: 8192 // 最大输出长度
+          ...validatedSettings,  // 使用验证后的设置
+          stopSequences: [],
+          candidateCount: 1,
         }
       };
 
@@ -64,14 +70,25 @@ export default {
       const data = await response.json();
       console.log('API Response:', JSON.stringify(data, null, 2));
 
+      // 检查是否有错误
       if (data.error) {
         throw new Error(`API Error: ${data.error.message}`);
       }
 
-      return new Response(JSON.stringify({
+      // 检查响应格式并确保完整性
+      if (!data.candidates?.[0]?.content?.parts) {
+        throw new Error('Invalid response format');
+      }
+
+      // 添加设置信息到响应中
+      const responseData = {
         success: true,
-        data: data
-      }), {
+        data: data,
+        usedSettings: validatedSettings,  // 返回实际使用的设置
+        tokenUsage: data.usageMetadata    // 返回 token 使用情况
+      };
+
+      return new Response(JSON.stringify(responseData), {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*"
