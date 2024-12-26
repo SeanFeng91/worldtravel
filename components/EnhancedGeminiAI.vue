@@ -41,7 +41,15 @@
 import { ref, watch, nextTick } from 'vue'
 import MarkdownIt from 'markdown-it'
 
-const md = new MarkdownIt()
+const md = new MarkdownIt({
+  html: true,
+  breaks: true,
+  linkify: true,
+  typographer: true,
+  highlight: function (str, lang) {
+    return `<pre class="language-${lang}"><code>${str}</code></pre>`
+  }
+})
 
 // 添加 renderMarkdown 函数
 const renderMarkdown = (text) => {
@@ -233,8 +241,10 @@ watch(() => currentChat.value.messages.length, async () => {
 
 .message {
   margin: 10px 0;
-  padding: 10px;
+  padding: 15px;
   border-radius: 8px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .message.user {
@@ -289,7 +299,9 @@ button:disabled {
 
 /* 添加 Markdown 内容样式 */
 .markdown-body :deep(p) {
-  margin: 0.5em 0;
+  margin: 0.8em 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .markdown-body :deep(pre) {
@@ -297,13 +309,18 @@ button:disabled {
   padding: 1em;
   border-radius: 4px;
   overflow-x: auto;
+  max-width: 100%;
+  white-space: pre;
 }
 
 .markdown-body :deep(code) {
-  font-family: monospace;
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
   background: #f6f8fa;
   padding: 0.2em 0.4em;
   border-radius: 3px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .markdown-body :deep(ul), 
@@ -317,5 +334,51 @@ button:disabled {
   padding-left: 1em;
   border-left: 4px solid #ddd;
   color: #666;
+}
+
+.message-content {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.markdown-body :deep(pre) code {
+  counter-reset: line;
+}
+
+.markdown-body :deep(pre) code > span {
+  display: block;
+}
+
+.markdown-body :deep(pre) code > span:before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  padding: 0 .5em;
+  margin-right: .5em;
+  color: #888;
+  border-right: 1px solid #ddd;
+}
+
+.markdown-body :deep(pre) {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background: #f6f8fa;
 }
 </style> 

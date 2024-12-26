@@ -15,22 +15,35 @@ export default {
     try {
       const { prompt, model, searchEnabled, messages } = await request.json();
 
-      // 创建请求结构
-      const requestBody = {
-        contents: messages || [{
+      // 修正消息格式
+      const contents = messages.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{
+          text: msg.content || prompt
+        }]
+      }));
+
+      // 如果没有历史消息，使用当前提示
+      if (!contents.length) {
+        contents.push({
+          role: 'user',
           parts: [{
             text: prompt
           }]
-        }],
+        });
+      }
+
+      // 创建请求结构
+      const requestBody = {
+        contents,
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
+          temperature: 0.3,    // 控制创造性/随机性
+          topK: 40,           // 控制词汇多样性
+          topP: 0.95,         // 控制输出概率阈值
+          maxOutputTokens: 8192 // 最大输出长度
         }
       };
 
-      // 如果启用搜索，使用官方的搜索工具配置
       if (searchEnabled) {
         requestBody.tools = [{
           'google_search': {}
@@ -51,14 +64,8 @@ export default {
       const data = await response.json();
       console.log('API Response:', JSON.stringify(data, null, 2));
 
-      // 检查是否有错误
       if (data.error) {
         throw new Error(`API Error: ${data.error.message}`);
-      }
-
-      // 检查响应格式
-      if (!data.candidates?.[0]?.content?.parts) {
-        throw new Error('Invalid response format');
       }
 
       return new Response(JSON.stringify({
