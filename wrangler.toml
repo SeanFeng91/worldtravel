@@ -1,0 +1,8 @@
+name = "gemini-worker"
+main = "workers/gemini-worker.js"
+compatibility_date = "2024-01-01"
+
+# 如果需要绑定自定义域名
+# [routes]
+# pattern = "api.yourdomain.com/*"
+# zone_id = "your-zone-id" 
