@@ -63,16 +63,16 @@
             <p>您可以尝试以下问题：</p>
             <ul>
               <li @click="sendSuggestion('帮我写一段贪吃蛇的Python代码')">
-                📝 帮我写一段Python代码
+                📝 帮我写一段贪吃蛇的Python代码
               </li>
               <li @click="sendSuggestion('帮我查一下今天北京到杭州的机票情况')">
-                🔍 解释一下什么是人工智能
+                🔍 帮我查一下今天北京到杭州的机票情况
               </li>
               <li @click="sendSuggestion('帮我规划一段3天东京自由行行程')">
                 💡 帮我规划一段3天东京自由行行程
               </li>
               <li @click="sendSuggestion('北京今天的天气情况如何')">
-                📚 如何学习编程？
+                📚 北京今天的天气情况如何
               </li>
             </ul>
           </div>
