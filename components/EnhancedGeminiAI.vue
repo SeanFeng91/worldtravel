@@ -10,11 +10,19 @@
           <span class="icon">⚙️</span> 参数设置
         </button>
 
-        <label class="search-toggle">
-          <input type="checkbox" v-model="searchEnabled">
-          <span class="search-label">启用搜索</span>
-          <span class="search-tooltip">启用后可以获取实时网络信息</span>
-        </label>
+        <div class="feature-toggles">
+          <label class="toggle-item">
+            <input type="checkbox" v-model="searchEnabled">
+            <span class="toggle-label">搜索</span>
+            <span class="toggle-tooltip">启用后可以获取实时网络信息</span>
+          </label>
+
+          <label class="toggle-item">
+            <input type="checkbox" v-model="mapEnabled">
+            <span class="toggle-label">地图</span>
+            <span class="toggle-tooltip">启用后可以在地图上显示位置</span>
+          </label>
+        </div>
       </div>
 
       <div v-if="showSettings" class="settings-panel">
@@ -88,6 +96,23 @@
                v-html="renderMarkdown(msg.content)"
                :class="{ 'markdown-body': msg.role === 'assistant' }">
           </div>
+          <div v-if="msg.maps && msg.maps.length > 0" class="map-container">
+            <img v-for="map in msg.maps" 
+                 :key="map.center" 
+                 :src="map.url" 
+                 class="map-image" 
+                 alt="Location Map"
+                 @error="handleMapError" />
+            <div v-for="map in msg.maps" :key="map.center" class="map-info">
+              <div class="map-location">📍 中心位置: {{ map.center }}</div>
+              <div v-if="map.markers?.length" class="map-markers">
+                🎯 标记点:
+                <ul>
+                  <li v-for="(marker, idx) in map.markers" :key="idx">{{ marker }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -105,6 +130,13 @@
         </div>
       </div>
     </div>
+
+    <div v-if="debugMode" class="debug-info">
+      <div class="debug-title">调试信息:</div>
+      <div>搜索功能: {{ searchEnabled ? '开启' : '关闭' }}</div>
+      <div>地图功能: {{ mapEnabled ? '开启' : '关闭' }}</div>
+      <div>最后一次工具调用: {{ lastToolCall }}</div>
+    </div>
   </div>
 </template>
 
@@ -113,6 +145,7 @@ import { ref, watch, nextTick } from 'vue'
 import MarkdownIt from 'markdown-it'
 
 const md = new MarkdownIt()
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 // 添加 renderMarkdown 函数
 const renderMarkdown = (text) => {
@@ -138,6 +171,7 @@ const currentChat = ref(chats.value[0])
 const isLoading = ref(false)
 const userInput = ref('')
 const searchEnabled = ref(false)
+const mapEnabled = ref(false)
 const chatContainer = ref(null)
 
 // AI 参数设置
@@ -148,6 +182,9 @@ const aiSettings = ref({
   topP: 0.95,
   maxOutputTokens: 8192
 })
+
+const debugMode = ref(false)  // 可以添加一个按钮来切换
+const lastToolCall = ref('无')
 
 // 开始新对话
 const startNewChat = () => {
@@ -162,66 +199,79 @@ const startNewChat = () => {
 
 // 发送消息
 const handleSend = async () => {
-  if (!userInput.value.trim() || isLoading.value) return
+  if (!userInput.value.trim() || isLoading.value) return;
   
-  isLoading.value = true
-  const prompt = userInput.value
-  userInput.value = ''
+  isLoading.value = true;
+  const prompt = userInput.value;
+  userInput.value = '';
 
   try {
     // 添加用户消息到当前对话
     currentChat.value.messages.push({
       role: 'user',
       content: prompt
-    })
+    });
 
-    // 构建包含历史记录的请求
-    const messages = currentChat.value.messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
-      parts: [{ text: msg.content }]
-    }))
+    console.log('Sending request with map enabled:', mapEnabled.value);
 
-    const response = await fetch('https://gemini-worker.fengyx91.workers.dev/', {
+    const response = await fetch(import.meta.env.VITE_WORKER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         prompt,
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-pro',
         searchEnabled: searchEnabled.value,
-        messages: messages,
-        settings: aiSettings.value  // 添加参数设置
+        mapEnabled: mapEnabled.value,
+        messages: currentChat.value.messages,
+        settings: aiSettings.value
       })
-    })
+    });
 
-    const result = await response.json()
-    console.log('API Response:', result)
+    const result = await response.json();
+    console.log('Full API Response:', result);
 
     if (!result.success) {
-      throw new Error(result.error || '请求失败')
+      throw new Error(result.error || '请求失败');
     }
 
-    const aiResponse = result.data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (aiResponse) {
-      currentChat.value.messages.push({
-        role: 'assistant',
-        content: aiResponse
-      })
-    } else {
-      throw new Error('返回数据格式不正确')
+    // 提取 AI 响应文本和工具调用
+    const parts = result.data?.candidates?.[0]?.content?.parts || [];
+    console.log('Response parts:', parts);
+
+    let aiResponse = '';
+    const toolResults = result.toolResults || [];
+
+    // 处理所有部分
+    for (const part of parts) {
+      if (part.text) {
+        aiResponse += part.text;
+      }
+      // 工具调用部分会在 toolResults 中处理
     }
+
+    if (!aiResponse && !toolResults.length) {
+      throw new Error('无有效的响应内容');
+    }
+
+    // 添加响应到消息列表
+    currentChat.value.messages.push({
+      role: 'assistant',
+      content: aiResponse || '我已经处理了您的请求，请查看地图显示。',
+      maps: toolResults
+    });
 
   } catch (error) {
-    console.error('生成回答失败:', error)
+    console.error('Send error:', error);
     currentChat.value.messages.push({
       role: 'error',
       content: '抱歉，生成回答时出现错误：' + error.message
-    })
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // 自动滚动到底部
 watch(() => currentChat.value.messages.length, async () => {
@@ -237,6 +287,16 @@ const sendSuggestion = (question) => {
   userInput.value = question;
   handleSend();
 };
+
+// 添加地图错误处理
+const handleMapError = (e) => {
+  console.error('Map image failed to load:', e)
+  e.target.classList.add('error')
+  const errorMessage = document.createElement('div')
+  errorMessage.className = 'error-message'
+  errorMessage.textContent = '地图加载失败，请检查 API Key 是否有效'
+  e.target.parentNode.insertBefore(errorMessage, e.target.nextSibling)
+}
 </script>
 
 <style scoped>
@@ -262,8 +322,9 @@ const sendSuggestion = (question) => {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 16px;
   padding: 15px 20px;
   background: #fff;
   border-bottom: 1px solid #e0e0e0;
@@ -293,7 +354,13 @@ const sendSuggestion = (question) => {
   font-weight: bold;
 }
 
-.search-toggle {
+.feature-toggles {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.toggle-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -301,10 +368,16 @@ const sendSuggestion = (question) => {
   cursor: pointer;
 }
 
-.search-tooltip {
+.toggle-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.toggle-tooltip {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background: #333;
   color: white;
   padding: 6px 12px;
@@ -313,10 +386,20 @@ const sendSuggestion = (question) => {
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
+  white-space: nowrap;
+  z-index: 1000;
 }
 
-.search-toggle:hover .search-tooltip {
+.toggle-item:hover .toggle-tooltip {
   opacity: 1;
+}
+
+/* 美化复选框样式 */
+.toggle-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
 }
 
 .welcome-message {
@@ -571,5 +654,92 @@ textarea:focus {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* 更新地图相关样式 */
+.map-container {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.map-image {
+  width: 100%;
+  max-width: 512px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.map-info {
+  margin-top: 10px;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #666;
+}
+
+.map-location {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.map-markers ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.map-markers li {
+  margin: 3px 0;
+}
+
+/* 添加加载和错误状态样式 */
+.map-image.loading {
+  background: #f0f0f0;
+  min-height: 200px;
+}
+
+.map-image.error {
+  border: 2px solid #ff4444;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .map-container {
+    margin: 10px -15px;
+    border-radius: 0;
+  }
+  
+  .map-image {
+    border-radius: 4px;
+  }
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #ffebee;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.debug-info {
+  margin-top: 20px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.debug-title {
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 </style> 
