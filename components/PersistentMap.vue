@@ -8,6 +8,9 @@
       <button @click="fitAllMarkers" class="control-btn" v-if="hasMarkers">
         显示所有标记
       </button>
+      <button @click="toggleMapSize" class="control-btn">
+        {{ isExpanded ? '收起地图' : '展开地图' }}
+      </button>
     </div>
   </div>
 </template>
@@ -24,6 +27,7 @@ const map = ref(null)
 const markers = ref([])
 const bounds = ref(null)
 const currentInfoWindow = ref(null)
+const isExpanded = ref(false)
 
 // 计算是否有标记
 const hasMarkers = computed(() => markers.value.length > 0)
@@ -49,8 +53,8 @@ const initMap = async () => {
     bounds.value = new window.google.maps.LatLngBounds()
     
     map.value = new window.google.maps.Map(mapElement.value, {
-      center: { lat: 35.6762, lng: 139.6503 },
-      zoom: 12,
+      center: { lat: 30, lng: 115 },
+      zoom: 4,
       mapTypeControl: true,
       streetViewControl: true,
       fullscreenControl: true
@@ -140,11 +144,39 @@ const updateMarkers = async (newMarkers) => {
 
 // 清除所有标记
 const clearMarkers = () => {
-  markers.value.forEach(marker => marker.setMap(null))
-  markers.value = []
-  if (currentInfoWindow.value) {
-    currentInfoWindow.value.close()
-    currentInfoWindow.value = null
+  try {
+    // 清除现有标记
+    if (markers.value && markers.value.length > 0) {
+      markers.value.forEach(marker => {
+        if (marker && marker.setMap) {
+          marker.setMap(null)
+        }
+      })
+      // 确保数组被清空
+      markers.value.length = 0
+    }
+    
+    // 清除信息窗口
+    if (currentInfoWindow.value) {
+      currentInfoWindow.value.close()
+      currentInfoWindow.value = null
+    }
+    
+    // 重置边界
+    if (window.google?.maps && map.value) {
+      bounds.value = new window.google.maps.LatLngBounds()
+      
+      // 重置地图中心和缩放级别
+      map.value.setCenter({ lat: 30, lng: 115 })
+      map.value.setZoom(4)
+      
+      // 触发地图重绘
+      google.maps.event.trigger(map.value, 'resize')
+    }
+
+    console.log('Markers cleared, current markers:', markers.value)
+  } catch (error) {
+    console.error('Error clearing markers:', error)
   }
 }
 
@@ -155,12 +187,18 @@ const fitAllMarkers = () => {
   }
 }
 
+// 添加切换地图大小的方法
+const toggleMapSize = () => {
+  isExpanded.value = !isExpanded.value
+}
+
 // 暴露方法给父组件
 defineExpose({
   initMap,
   updateMarkers,
   clearMarkers,
-  fitAllMarkers
+  fitAllMarkers,
+  map
 })
 
 onMounted(() => {
@@ -176,10 +214,11 @@ onUnmounted(() => {
 .map-container {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: v-bind('isExpanded ? "600px" : "300px"');
   margin: 10px 0;
   border-radius: 8px;
   overflow: hidden;
+  transition: height 0.3s ease;
 }
 
 .map {
@@ -193,6 +232,7 @@ onUnmounted(() => {
   right: 10px;
   display: flex;
   gap: 8px;
+  z-index: 1;
 }
 
 .control-btn {
@@ -203,9 +243,17 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 14px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
 }
 
 .control-btn:hover {
   background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style> 

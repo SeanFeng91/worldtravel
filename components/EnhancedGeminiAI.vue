@@ -64,46 +64,48 @@
         </div>
       </div>
 
-      <PersistentMap 
-        :map-enabled="mapEnabled"
-        ref="mapRef"
-      />
+      <div class="content-wrapper">
+        <PersistentMap 
+          :map-enabled="mapEnabled"
+          ref="mapRef"
+        />
 
-      <div class="chat-history scroll-container" ref="chatContainer">
-        <div v-if="currentChat.messages.length === 0" class="welcome-message">
-          <h2>👋 欢迎使用 Gemini AI 助手</h2>
-          <div class="suggestions">
-            <p>您可以尝试以下问题：</p>
-            <ul>
-              <li @click="sendSuggestion('帮我写一段贪吃蛇的Python代码')">
-                📝 帮我写一段贪吃蛇的Python代码
-              </li>
-              <li @click="sendSuggestion('帮我查一下今天北京到杭州的机票情况')">
-                🔍 帮我查一下今天北京到杭州的机票情况
-              </li>
-              <li @click="sendSuggestion('帮我规划一段3天东京自由行行程，在地图上标记去的地方')">
-                💡 帮我规划一段3天东京自由行行程，在地图上标记去的地方
-              </li>
-              <li @click="sendSuggestion('北京今天的天气情况如何')">
-                📚 北京今天的天气情况如何
-              </li>
-            </ul>
+        <div class="chat-history scroll-container" ref="chatContainer">
+          <div v-if="currentChat.messages.length === 0" class="welcome-message">
+            <h2>👋 欢迎使用 Gemini AI 助手</h2>
+            <div class="suggestions">
+              <p>您可以尝试以下问题：</p>
+              <ul>
+                <li @click="sendSuggestion('帮我写一段贪吃蛇的Python代码')">
+                  📝 帮我写一段贪吃蛇的Python代码
+                </li>
+                <li @click="sendSuggestion('帮我查一下今天北京到杭州的机票情况')">
+                  🔍 帮我查一下今天北京到杭州的机票情况
+                </li>
+                <li @click="sendSuggestion('帮我规划一段3天东京自由行行程，在地图上标记去的地方')">
+                  💡 帮我规划一段3天东京自由行行程，在地图上标记去的地方
+                </li>
+                <li @click="sendSuggestion('北京今天的天气情况如何')">
+                  📚 北京今天的天气情况如何
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        <div v-for="(msg, index) in currentChat.messages" :key="index" 
-             :class="['message', msg.role]">
-          <div class="message-header">
-            <span class="role-icon">{{ msg.role === 'user' ? '👤' : '🤖' }}</span>
-            <span class="role-name">{{ msg.role === 'user' ? '您' : 'AI 助手' }}</span>
-          </div>
-          <div class="message-content" 
-               v-html="renderMarkdown(msg.content)"
-               :class="{ 'markdown-body': msg.role === 'assistant' }">
+          <div v-for="(msg, index) in currentChat.messages" :key="index" 
+               :class="['message', msg.role]">
+            <div class="message-header">
+              <span class="role-icon">{{ msg.role === 'user' ? '👤' : '🤖' }}</span>
+              <span class="role-name">{{ msg.role === 'user' ? '您' : 'AI 助手' }}</span>
+            </div>
+            <div class="message-content" 
+                 v-html="renderMarkdown(msg.content)"
+                 :class="{ 'markdown-body': msg.role === 'assistant' }">
+            </div>
           </div>
         </div>
       </div>
-      
+
       <div class="input-area">
         <textarea 
           v-model="userInput"
@@ -131,6 +133,7 @@
 <script setup>
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import MarkdownIt from 'markdown-it'
+import { Loader } from '@googlemaps/js-api-loader'
 import PersistentMap from './PersistentMap.vue'
 
 const md = new MarkdownIt()
@@ -178,6 +181,12 @@ const aiSettings = ref({
 const debugMode = ref(false)  // 可以添加一个按钮来切换
 const lastToolCall = ref('无')
 
+// 初始化 Google Maps Loader
+const loader = new Loader({
+  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  version: "weekly",
+});
+
 // 存储地图实例
 const mapInstances = ref(new Map())
 
@@ -186,6 +195,8 @@ const initMap = async (element, mapData, mapIndex) => {
   if (!element || mapInstances.value.has(mapIndex)) return;
 
   try {
+    const google = await loader.load();
+    
     // 预先进行所有地理编码操作
     const geocodePromises = mapData.markers?.map(async (markerData) => {
       try {
@@ -306,7 +317,17 @@ const startNewChat = () => {
   chats.value.push(newChat)
   currentChat.value = newChat
   userInput.value = ''
+  
+  // 清除地图标记
   mapRef.value?.clearMarkers()
+}
+
+// 添加清除地图数据的方法
+const clearMapData = () => {
+  if (mapRef.value) {
+    mapRef.value.clearMarkers()
+    // 如果有其他地图相关的状态，也在这里清除
+  }
 }
 
 // 发送消息
@@ -365,22 +386,10 @@ const handleSend = async () => {
         await mapRef.value?.initMap();
       }
 
-      // 确保 google maps API 已加载
-      if (!window.google?.maps) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
-          script.async = true;
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-
       // 如果有中心点，使用地理编码设置地图中心
       if (mapData.center) {
         try {
-          const geocoder = new window.google.maps.Geocoder();
+          const geocoder = new google.maps.Geocoder();
           const response = await new Promise((resolve, reject) => {
             geocoder.geocode({ address: mapData.center }, (results, status) => {
               if (status === 'OK' && results[0]) {
@@ -401,7 +410,7 @@ const handleSend = async () => {
       // 处理标记点
       if (Array.isArray(mapData.markers)) {
         try {
-          const geocoder = new window.google.maps.Geocoder();
+          const geocoder = new google.maps.Geocoder();
           const geocodePromises = mapData.markers.map(location => 
             new Promise((resolve) => {
               geocoder.geocode({ address: location }, (results, status) => {
@@ -429,13 +438,15 @@ const handleSend = async () => {
     }
 
   } catch (error) {
-    console.error('Error in handleSend:', error);
+    console.error('Error in handleSend:', error)
     currentChat.value.messages.push({
       role: 'error',
-      content: '抱歉，生成回答时出现错误：' + error.message
-    });
+      content: '发生错误：' + error.message
+    })
+    // 发生错误时也清除地图数据
+    clearMapData()
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 };
 
@@ -477,164 +488,62 @@ watch(mapEnabled, async (newValue) => {
 
 <style scoped>
 .enhanced-gemini {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
   height: 100%;
-  background: #fff;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7f9;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e3e7;
+  overflow: hidden;
 }
 
 .chat-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
   gap: 20px;
-  height: calc(100vh - 100px);
-  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 20px;
+}
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
   border-radius: 8px;
-  background: #f8f9fa;
-}
-
-.toolbar {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 16px;
-  padding: 15px 20px;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-  border-radius: 8px 8px 0 0;
-}
-
-.new-chat-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.new-chat-btn:hover {
-  background: #45a049;
-  transform: translateY(-1px);
-}
-
-.new-chat-btn .icon {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.feature-toggles {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.toggle-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  cursor: pointer;
-}
-
-.toggle-label {
-  font-size: 14px;
-  color: #666;
-}
-
-.toggle-tooltip {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  white-space: nowrap;
-  z-index: 1000;
-}
-
-.toggle-item:hover .toggle-tooltip {
-  opacity: 1;
-}
-
-/* 美化复选框样式 */
-.toggle-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-}
-
-.welcome-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.suggestions {
-  margin-top: 20px;
-  text-align: left;
-  max-width: 400px;
-  margin: 20px auto;
-}
-
-.suggestions ul {
-  list-style: none;
-  padding: 0;
-}
-
-.suggestions li {
-  margin: 10px 0;
-  padding: 10px 15px;
-  background: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
-}
-
-.suggestions li:hover {
-  background: #f0f0f0;
-  transform: translateX(5px);
-  border-color: #4CAF50;
-  color: #4CAF50;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  min-height: 200px;
 }
 
 .message {
-  margin: 10px 20px;
-  padding: 15px;
-  border-radius: 12px;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .message.user {
   background: #e3f2fd;
-  margin-left: 60px;
-  border: 1px solid #bbdefb;
+  margin-left: 0;
 }
 
 .message.assistant {
-  background: #fff;
-  margin-right: 60px;
-  border: 1px solid #e0e0e0;
+  background: #f5f5f5;
+  margin-right: 0;
 }
 
 .message.error {
@@ -647,73 +556,49 @@ watch(mapEnabled, async (newValue) => {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  font-size: 14px;
-  color: #666;
 }
 
-.role-icon {
-  font-size: 18px;
+.message-content {
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .input-area {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   padding: 20px;
-  background: #fff;
-  border-top: 1px solid #e0e0e0;
-  border-radius: 0 0 8px 8px;
 }
 
 textarea {
   width: 100%;
   min-height: 80px;
   padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
   resize: vertical;
   font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-textarea:focus {
-  border-color: #4CAF50;
-  outline: none;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
 .controls {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
-.send-btn {
+.toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  background: #007AFF;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  gap: 16px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.send-btn:hover:not(:disabled) {
-  background: #0056b3;
-  transform: translateY(-1px);
-}
-
-.send-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* 滚动条样式 */
-.scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 0;
-}
-
+/* 添加滚动条样式 */
 .scroll-container::-webkit-scrollbar {
   width: 8px;
 }
@@ -724,157 +609,137 @@ textarea:focus {
 }
 
 .scroll-container::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #c1c1c1;
   border-radius: 4px;
 }
 
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #a8a8a8;
 }
 
-/* 添加 Markdown 内容样式 */
-.markdown-body :deep(p) {
-  margin: 0.5em 0;
+/* 欢迎消息样式 */
+.welcome-message {
+  text-align: center;
+  padding: 40px 20px;
 }
 
-.markdown-body :deep(pre) {
-  background: #f6f8fa;
-  padding: 1em;
-  border-radius: 4px;
-  overflow-x: auto;
+.welcome-message h2 {
+  margin-bottom: 20px;
+  color: #333;
 }
 
-.markdown-body :deep(code) {
-  font-family: monospace;
-  background: #f6f8fa;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
+.suggestions {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.markdown-body :deep(ul), 
-.markdown-body :deep(ol) {
-  padding-left: 2em;
-  margin: 0.5em 0;
+.suggestions ul {
+  list-style: none;
+  padding: 0;
 }
 
-.markdown-body :deep(blockquote) {
-  margin: 0.5em 0;
-  padding-left: 1em;
-  border-left: 4px solid #ddd;
-  color: #666;
-}
-
-/* 添加新样式 */
-.settings-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #666;
-  color: white;
-  border: none;
+.suggestions li {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: white;
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
-.settings-btn:hover {
-  background: #555;
+.suggestions li:hover {
+  background: #f5f5f5;
   transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* 设置面板样式 */
 .settings-panel {
-  padding: 15px;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-  animation: slideDown 0.3s ease;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .setting-item {
-  margin: 10px 0;
+  margin-bottom: 20px;
 }
 
-.setting-item label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
+.setting-item:last-child {
+  margin-bottom: 0;
 }
 
 .slider-container {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.slider-container input[type="range"] {
-  flex: 1;
-  height: 4px;
-  background: #ddd;
-  border-radius: 2px;
-  outline: none;
-}
-
-.slider-container .value {
-  min-width: 40px;
-  text-align: right;
-  color: #666;
+  gap: 12px;
+  margin: 8px 0;
 }
 
 .setting-desc {
-  margin-top: 4px;
   font-size: 12px;
   color: #666;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 添加加载和错误状态样式 */
-.map-image.loading {
-  background: #f0f0f0;
-  min-height: 200px;
-}
-
-.map-image.error {
-  border: 2px solid #ff4444;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .map-container {
-    margin: 10px -15px;
-    border-radius: 0;
-  }
-  
-  .map-image {
-    border-radius: 4px;
-  }
-}
-
-.error-message {
-  color: #ff4444;
+/* 按钮样式 */
+.send-btn, .new-chat-btn, .settings-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   font-size: 14px;
-  margin-top: 8px;
-  padding: 8px;
-  background: #ffebee;
-  border-radius: 4px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
 }
 
-.debug-info {
-  margin-top: 20px;
-  padding: 10px;
-  background: #f5f5f5;
+.send-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.send-btn:hover {
+  background: #45a049;
+}
+
+.send-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Feature toggles 样式 */
+.feature-toggles {
+  display: flex;
+  gap: 16px;
+}
+
+.toggle-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.8);
+  color: white;
   border-radius: 4px;
   font-size: 12px;
-  color: #666;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
 }
 
-.debug-title {
-  font-weight: bold;
-  margin-bottom: 5px;
+.toggle-item:hover .toggle-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 </style> 
