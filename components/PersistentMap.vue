@@ -83,84 +83,72 @@ const loadGoogleMaps = () => {
 const updateMarkers = async (newMarkers) => {
   if (!map.value) return
 
+  console.log('Updating markers with:', newMarkers);
+
   try {
     const google = window.google
     bounds.value = new google.maps.LatLngBounds()
 
+    // 清除现有标记
+    markers.value.forEach(marker => marker.setMap(null))
+    markers.value = []
+
     // 处理新标记
-    for (const markerData of newMarkers) {
+    for (const markerStr of newMarkers) {
       try {
-        let position
-        let title
+        // 确保是字符串格式的坐标
+        if (typeof markerStr !== 'string') {
+          console.warn('Invalid marker format:', markerStr);
+          continue;
+        }
 
-        if (typeof markerData === 'object') {
-          if (!markerData.coordinates.includes(',')) {
-            const geocoder = new google.maps.Geocoder()
-            const result = await new Promise((resolve, reject) => {
-              geocoder.geocode(
-                { address: markerData.address, region: 'jp' },
-                (results, status) => {
-                  if (status === 'OK' && results[0]) {
-                    resolve(results[0].geometry.location)
-                  } else {
-                    reject(new Error(`Geocode failed: ${status}`))
-                  }
-                }
-              )
-            })
-            position = result
-          } else {
-            const [lat, lng] = markerData.coordinates.split(',').map(Number)
-            position = { lat, lng }
+        // 解析坐标
+        const [lat, lng] = markerStr.split(',').map(Number);
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn('Invalid coordinates:', markerStr);
+          continue;
+        }
+
+        const position = { lat, lng };
+        console.log('Creating marker at position:', position);
+
+        const marker = new google.maps.Marker({
+          position,
+          map: map.value,
+          title: `${lat},${lng}`,
+          animation: google.maps.Animation.DROP
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: `<div style="padding: 8px;">${lat},${lng}</div>`
+        });
+
+        marker.addListener('click', () => {
+          if (currentInfoWindow.value) {
+            currentInfoWindow.value.close();
           }
-          title = markerData.address
-        }
+          infoWindow.open(map.value, marker);
+          currentInfoWindow.value = infoWindow;
+        });
 
-        if (position) {
-          const marker = new google.maps.Marker({
-            position,
-            map: map.value,
-            title,
-            animation: google.maps.Animation.DROP,
-            icon: {
-              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-              scaledSize: new google.maps.Size(32, 32),
-              origin: new google.maps.Point(0, 0),
-              anchor: new google.maps.Point(16, 32)
-            }
-          })
-
-          const infoWindow = new google.maps.InfoWindow({
-            content: `<div style="padding: 8px;">${title}</div>`
-          })
-
-          marker.addListener('click', () => {
-            if (currentInfoWindow.value) {
-              currentInfoWindow.value.close()
-            }
-            infoWindow.open(map.value, marker)
-            currentInfoWindow.value = infoWindow
-          })
-
-          markers.value.push(marker)
-          bounds.value.extend(position)
-        }
+        markers.value.push(marker);
+        bounds.value.extend(position);
       } catch (error) {
-        console.error('Marker creation error:', error)
+        console.error('Marker creation error:', error);
       }
     }
 
     // 调整地图视野
     if (markers.value.length > 0) {
-      map.value.fitBounds(bounds.value)
+      map.value.fitBounds(bounds.value);
       if (markers.value.length === 1) {
-        map.value.setZoom(Math.min(15, map.value.getZoom()))
+        map.value.setZoom(Math.min(15, map.value.getZoom()));
       }
     }
   } catch (error) {
-    console.error('Update markers error:', error)
+    console.error('Update markers error:', error);
   }
-}
+};
 
 // 清除所有标记
 const clearMarkers = () => {

@@ -364,13 +364,69 @@ const handleSend = async () => {
       content: aiResponse
     });
 
-    // 如果有地图数据，更新地图
+    // 处理地图数据
     if (result.toolResults?.length) {
-      mapRef.value?.updateMarkers(result.toolResults[0].markers || []);
+      const mapData = result.toolResults[0];
+      console.log('Map data received:', mapData);
+      
+      // 初始化地图（如果还没有初始化）
+      if (!mapRef.value?.map) {
+        await mapRef.value?.initMap();
+      }
+
+      // 如果有中心点，使用地理编码设置地图中心
+      if (mapData.center) {
+        try {
+          const geocoder = new google.maps.Geocoder();
+          const response = await new Promise((resolve, reject) => {
+            geocoder.geocode({ address: mapData.center }, (results, status) => {
+              if (status === 'OK' && results[0]) {
+                resolve(results[0].geometry.location);
+              } else {
+                reject(new Error(`Geocoding failed: ${status}`));
+              }
+            });
+          });
+          
+          mapRef.value?.map?.setCenter(response);
+          mapRef.value?.map?.setZoom(mapData.zoom || 12);
+        } catch (error) {
+          console.error('Error geocoding center:', error);
+        }
+      }
+
+      // 处理标记点
+      if (Array.isArray(mapData.markers)) {
+        try {
+          const geocoder = new google.maps.Geocoder();
+          const geocodePromises = mapData.markers.map(location => 
+            new Promise((resolve) => {
+              geocoder.geocode({ address: location }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                  const pos = results[0].geometry.location;
+                  resolve(`${pos.lat()},${pos.lng()}`);
+                } else {
+                  resolve(null);
+                }
+              });
+            })
+          );
+
+          const coordinates = (await Promise.all(geocodePromises))
+            .filter(coord => coord !== null);
+
+          console.log('Geocoded coordinates:', coordinates);
+          if (coordinates.length > 0) {
+            await mapRef.value?.updateMarkers(coordinates);
+          }
+        } catch (error) {
+          console.error('Error processing markers:', error);
+        }
+      }
     }
 
   } catch (error) {
-    console.error('Send error:', error);
+    console.error('Error in handleSend:', error);
     currentChat.value.messages.push({
       role: 'error',
       content: '抱歉，生成回答时出现错误：' + error.message
