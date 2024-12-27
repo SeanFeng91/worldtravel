@@ -131,7 +131,6 @@
 <script setup>
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import MarkdownIt from 'markdown-it'
-import { Loader } from '@googlemaps/js-api-loader'
 import PersistentMap from './PersistentMap.vue'
 
 const md = new MarkdownIt()
@@ -179,12 +178,6 @@ const aiSettings = ref({
 const debugMode = ref(false)  // 可以添加一个按钮来切换
 const lastToolCall = ref('无')
 
-// 初始化 Google Maps Loader
-const loader = new Loader({
-  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  version: "weekly",
-});
-
 // 存储地图实例
 const mapInstances = ref(new Map())
 
@@ -193,8 +186,6 @@ const initMap = async (element, mapData, mapIndex) => {
   if (!element || mapInstances.value.has(mapIndex)) return;
 
   try {
-    const google = await loader.load();
-    
     // 预先进行所有地理编码操作
     const geocodePromises = mapData.markers?.map(async (markerData) => {
       try {
@@ -374,10 +365,22 @@ const handleSend = async () => {
         await mapRef.value?.initMap();
       }
 
+      // 确保 google maps API 已加载
+      if (!window.google?.maps) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
       // 如果有中心点，使用地理编码设置地图中心
       if (mapData.center) {
         try {
-          const geocoder = new google.maps.Geocoder();
+          const geocoder = new window.google.maps.Geocoder();
           const response = await new Promise((resolve, reject) => {
             geocoder.geocode({ address: mapData.center }, (results, status) => {
               if (status === 'OK' && results[0]) {
@@ -398,7 +401,7 @@ const handleSend = async () => {
       // 处理标记点
       if (Array.isArray(mapData.markers)) {
         try {
-          const geocoder = new google.maps.Geocoder();
+          const geocoder = new window.google.maps.Geocoder();
           const geocodePromises = mapData.markers.map(location => 
             new Promise((resolve) => {
               geocoder.geocode({ address: location }, (results, status) => {

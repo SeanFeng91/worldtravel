@@ -33,16 +33,24 @@ const initMap = async () => {
   if (!mapElement.value || map.value) return
 
   try {
-    // 确保 google maps API 已加载
+    // 确保 Google Maps API 已加载
     if (!window.google?.maps) {
-      await loadGoogleMaps()
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
+        script.async = true
+        script.defer = true
+        script.onload = resolve
+        script.onerror = () => reject(new Error('Google Maps 加载失败'))
+        document.head.appendChild(script)
+      })
     }
 
-    bounds.value = new google.maps.LatLngBounds()
+    bounds.value = new window.google.maps.LatLngBounds()
     
-    map.value = new google.maps.Map(mapElement.value, {
-      center: { lat: 30, lng: 110 },
-      zoom: 3,
+    map.value = new window.google.maps.Map(mapElement.value, {
+      center: { lat: 35.6762, lng: 139.6503 },
+      zoom: 12,
       mapTypeControl: true,
       streetViewControl: true,
       fullscreenControl: true
@@ -57,26 +65,6 @@ const initMap = async () => {
   } catch (error) {
     console.error('Map initialization error:', error)
   }
-}
-
-// 添加 Google Maps API 加载函数
-const loadGoogleMaps = () => {
-  return new Promise((resolve, reject) => {
-    if (window.google?.maps) {
-      resolve()
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
-    
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Google Maps 加载失败'))
-    
-    document.head.appendChild(script)
-  })
 }
 
 // 更新地图标记
