@@ -40,47 +40,76 @@ async function handleToolCalls(toolCalls, env) {
   for (const call of toolCalls) {
     if (call.functionCall?.name === 'draw_map') {
       try {
-        // 直接使用 args，不需要 JSON.parse
-        const args = call.functionCall.args;
-        console.log('Map function args:', args);
-        
-        // 验证必要参数
+        // 修复 JSON 解析问题
+        let args;
+        if (typeof call.functionCall.args === 'string') {
+          args = JSON.parse(call.functionCall.args);
+        } else if (typeof call.functionCall.args === 'object') {
+          args = call.functionCall.args;
+        } else {
+          throw new Error('Invalid arguments format');
+        }
+
+        console.log('Raw function call:', call.functionCall); // 调试日志
+        console.log('Parsed args:', args); // 调试日志
+
         if (!args.center || !args.zoom) {
           throw new Error('center 和 zoom 参数是必需的');
         }
 
-        // 验证并规范化缩放级别
         const zoom = Math.max(0, Math.min(21, parseInt(args.zoom)));
 
-        // 构建基础参数
-        const params = new URLSearchParams({
-          key: env.MAPS_API_KEY,
-          center: args.center,
-          zoom: zoom,
-          size: '512x512',
-          scale: 2,
-          language: 'zh-CN'
-        });
-
-        // 处理标记
-        if (args.markers?.length) {
-          args.markers.forEach(marker => {
-            params.append('markers', `color:red|size:mid|${marker}`);
-          });
+        // 使用 Google Maps Geocoding API 处理地址
+        if (typeof args.center === 'string' && !args.center.includes(',')) {
+          const geocodeResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(args.center)}&key=${env.GOOGLE_API_KEY}`
+          );
+          const geocodeData = await geocodeResponse.json();
+          
+          if (geocodeData.status === 'OK') {
+            const location = geocodeData.results[0].geometry.location;
+            args.center = `${location.lat},${location.lng}`;
+          } else {
+            throw new Error(`Geocoding failed: ${geocodeData.status}`);
+          }
         }
 
-        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
-        console.log('Generated map URL:', mapUrl);
+        // 处理标记点的地理编码
+        if (args.markers?.length) {
+          const geocodedMarkers = await Promise.all(
+            args.markers.map(async (marker) => {
+              if (typeof marker === 'string' && !marker.includes(',')) {
+                try {
+                  const markerGeocodeResponse = await fetch(
+                    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(marker)}&key=${env.GOOGLE_API_KEY}`
+                  );
+                  const markerGeocodeData = await markerGeocodeResponse.json();
+                  
+                  if (markerGeocodeData.status === 'OK') {
+                    const location = markerGeocodeData.results[0].geometry.location;
+                    return `${location.lat},${location.lng}`;
+                  }
+                } catch (error) {
+                  console.error('Marker geocoding error:', error);
+                  return null;
+                }
+              }
+              return marker;
+            })
+          );
+
+          args.markers = geocodedMarkers.filter(marker => marker !== null);
+        }
 
         results.push({
           type: 'map',
-          url: mapUrl,
           center: args.center,
           zoom: zoom,
           markers: args.markers || []
         });
       } catch (error) {
         console.error('Map generation error:', error);
+        console.error('Function call data:', call.functionCall); // 添加更多错误信息
         throw error;
       }
     }
@@ -204,7 +233,13 @@ export default {
 
         // 处理工具调用
         if (toolCalls.length > 0) {
-          responseData.toolResults = await handleToolCalls(toolCalls, env);
+          try {
+            responseData.toolResults = await handleToolCalls(toolCalls, env);
+          } catch (error) {
+            console.error('Tool call error:', error);
+            // 继续处理文本响应，但记录工具调用错误
+            responseData.toolError = error.message;
+          }
         }
 
         // 合并文本响应
@@ -213,7 +248,7 @@ export default {
         }];
       }
 
-      console.log('Final response:', responseData);
+      console.log('Final response:', JSON.stringify(responseData, null, 2));
 
       return new Response(JSON.stringify(responseData), {
         headers: {

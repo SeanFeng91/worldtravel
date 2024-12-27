@@ -64,6 +64,11 @@
         </div>
       </div>
 
+      <PersistentMap 
+        :map-enabled="mapEnabled"
+        ref="mapRef"
+      />
+
       <div class="chat-history scroll-container" ref="chatContainer">
         <div v-if="currentChat.messages.length === 0" class="welcome-message">
           <h2>👋 欢迎使用 Gemini AI 助手</h2>
@@ -76,8 +81,8 @@
               <li @click="sendSuggestion('帮我查一下今天北京到杭州的机票情况')">
                 🔍 帮我查一下今天北京到杭州的机票情况
               </li>
-              <li @click="sendSuggestion('帮我规划一段3天东京自由行行程')">
-                💡 帮我规划一段3天东京自由行行程
+              <li @click="sendSuggestion('帮我规划一段3天东京自由行行程，在地图上标记去的地方')">
+                💡 帮我规划一段3天东京自由行行程，在地图上标记去的地方
               </li>
               <li @click="sendSuggestion('北京今天的天气情况如何')">
                 📚 北京今天的天气情况如何
@@ -95,23 +100,6 @@
           <div class="message-content" 
                v-html="renderMarkdown(msg.content)"
                :class="{ 'markdown-body': msg.role === 'assistant' }">
-          </div>
-          <div v-if="msg.maps && msg.maps.length > 0" class="map-container">
-            <img v-for="map in msg.maps" 
-                 :key="map.center" 
-                 :src="map.url" 
-                 class="map-image" 
-                 alt="Location Map"
-                 @error="handleMapError" />
-            <div v-for="map in msg.maps" :key="map.center" class="map-info">
-              <div class="map-location">📍 中心位置: {{ map.center }}</div>
-              <div v-if="map.markers?.length" class="map-markers">
-                🎯 标记点:
-                <ul>
-                  <li v-for="(marker, idx) in map.markers" :key="idx">{{ marker }}</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -141,22 +129,27 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import MarkdownIt from 'markdown-it'
+import { Loader } from '@googlemaps/js-api-loader'
+import PersistentMap from './PersistentMap.vue'
 
 const md = new MarkdownIt()
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+const mapRef = ref(null)
 
 // 添加 renderMarkdown 函数
 const renderMarkdown = (text) => {
-  if (!text) return ''
+  if (!text) return '';
   try {
-    return md.render(text)
+    // 移除包含 coordinates 和 address 的行
+    const cleanedText = text.replace(/\n[^]*?coordinates[^]*?address[^}]*}/g, '');
+    return md.render(cleanedText);
   } catch (error) {
-    console.error('Markdown rendering error:', error)
-    return text
+    console.error('Markdown rendering error:', error);
+    return text;
   }
-}
+};
 
 // 对话历史结构
 const chats = ref([{
@@ -186,6 +179,133 @@ const aiSettings = ref({
 const debugMode = ref(false)  // 可以添加一个按钮来切换
 const lastToolCall = ref('无')
 
+// 初始化 Google Maps Loader
+const loader = new Loader({
+  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  version: "weekly",
+});
+
+// 存储地图实例
+const mapInstances = ref(new Map())
+
+// 初始化地图的方法
+const initMap = async (element, mapData, mapIndex) => {
+  if (!element || mapInstances.value.has(mapIndex)) return;
+
+  try {
+    const google = await loader.load();
+    
+    // 预先进行所有地理编码操作
+    const geocodePromises = mapData.markers?.map(async (markerData) => {
+      try {
+        if (typeof markerData === 'object' && !markerData.coordinates.includes(',')) {
+          const geocoder = new google.maps.Geocoder();
+          const result = await new Promise((resolve, reject) => {
+            geocoder.geocode(
+              { address: markerData.address, region: 'jp' },
+              (results, status) => {
+                if (status === 'OK' && results[0]) {
+                  resolve({
+                    position: results[0].geometry.location,
+                    title: markerData.address
+                  });
+                } else {
+                  reject(new Error(`Geocode failed: ${status}`));
+                }
+              }
+            );
+          });
+          return result;
+        } else {
+          const [lat, lng] = (markerData.coordinates || markerData).split(',').map(Number);
+          return {
+            position: { lat, lng },
+            title: markerData.address || markerData
+          };
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        return null;
+      }
+    }) || [];
+
+    // 等待所有地理编码完成
+    const geocodedMarkers = (await Promise.all(geocodePromises)).filter(Boolean);
+
+    // 创建地图
+    const map = new google.maps.Map(element, {
+      center: { lat: 35.6762, lng: 139.6503 }, // 默认中心点
+      zoom: 12,
+      mapTypeControl: true,
+      streetViewControl: true,
+      fullscreenControl: true,
+    });
+
+    // 存储当前打开的信息窗口
+    let currentInfoWindow = null;
+
+    const bounds = new google.maps.LatLngBounds();
+
+    // 一次性添加所有标记
+    geocodedMarkers.forEach(({ position, title }) => {
+      const marker = new google.maps.Marker({
+        position,
+        map,
+        title,
+        animation: google.maps.Animation.DROP,
+        icon: {
+          url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+          scaledSize: new google.maps.Size(32, 32),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(16, 32)
+        }
+      });
+
+      // 添加信息窗口
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="padding: 8px;">${title}</div>`
+      });
+
+      marker.addListener('click', () => {
+        // 关闭之前打开的信息窗口
+        if (currentInfoWindow) {
+          currentInfoWindow.close();
+        }
+        infoWindow.open(map, marker);
+        currentInfoWindow = infoWindow;
+      });
+
+      bounds.extend(position);
+    });
+
+    // 调整地图视野以显示所有标记
+    if (geocodedMarkers.length > 0) {
+      map.fitBounds(bounds);
+      if (geocodedMarkers.length === 1) {
+        map.setZoom(Math.min(15, map.getZoom()));
+      }
+    }
+
+    // 点击地图时关闭信息窗口
+    map.addListener('click', () => {
+      if (currentInfoWindow) {
+        currentInfoWindow.close();
+        currentInfoWindow = null;
+      }
+    });
+
+    mapInstances.value.set(mapIndex, map);
+
+  } catch (error) {
+    console.error('Map initialization error:', error);
+  }
+};
+
+// 在组件卸载时清理地图实例
+onUnmounted(() => {
+  mapInstances.value.clear();
+});
+
 // 开始新对话
 const startNewChat = () => {
   const newChat = {
@@ -195,6 +315,7 @@ const startNewChat = () => {
   chats.value.push(newChat)
   currentChat.value = newChat
   userInput.value = ''
+  mapRef.value?.clearMarkers()
 }
 
 // 发送消息
@@ -240,9 +361,13 @@ const handleSend = async () => {
     // 添加响应到消息列表
     currentChat.value.messages.push({
       role: 'assistant',
-      content: aiResponse,
-      maps: result.toolResults || []
+      content: aiResponse
     });
+
+    // 如果有地图数据，更新地图
+    if (result.toolResults?.length) {
+      mapRef.value?.updateMarkers(result.toolResults[0].markers || []);
+    }
 
   } catch (error) {
     console.error('Send error:', error);
@@ -279,6 +404,16 @@ const handleMapError = (e) => {
   errorMessage.textContent = '地图加载失败，请检查 API Key 是否有效'
   e.target.parentNode.insertBefore(errorMessage, e.target.nextSibling)
 }
+
+// 监听 mapEnabled 的变化
+watch(mapEnabled, async (newValue) => {
+  if (newValue) {
+    // 确保地图组件已经挂载
+    await nextTick()
+    // 初始化地图
+    mapRef.value?.initMap()
+  }
+})
 </script>
 
 <style scoped>
@@ -636,47 +771,6 @@ textarea:focus {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* 更新地图相关样式 */
-.map-container {
-  margin: 15px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-}
-
-.map-image {
-  width: 100%;
-  max-width: 512px;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 10px;
-}
-
-.map-info {
-  margin-top: 10px;
-  padding: 10px;
-  background: white;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #666;
-}
-
-.map-location {
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-.map-markers ul {
-  margin: 5px 0;
-  padding-left: 20px;
-}
-
-.map-markers li {
-  margin: 3px 0;
 }
 
 /* 添加加载和错误状态样式 */
