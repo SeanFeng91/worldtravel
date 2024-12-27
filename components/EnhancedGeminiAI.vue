@@ -133,7 +133,6 @@
 <script setup>
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import MarkdownIt from 'markdown-it'
-import { Loader } from '@googlemaps/js-api-loader'
 import PersistentMap from './PersistentMap.vue'
 
 const md = new MarkdownIt()
@@ -181,21 +180,35 @@ const aiSettings = ref({
 const debugMode = ref(false)  // 可以添加一个按钮来切换
 const lastToolCall = ref('无')
 
-// 初始化 Google Maps Loader
-const loader = new Loader({
-  apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  version: "weekly",
-});
-
 // 存储地图实例
 const mapInstances = ref(new Map())
+
+// 替换 loader 相关代码
+const loadGoogleMapsScript = () => {
+  return new Promise((resolve, reject) => {
+    if (window.google?.maps) {
+      resolve(window.google);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    
+    script.onload = () => resolve(window.google);
+    script.onerror = (err) => reject(err);
+    
+    document.head.appendChild(script);
+  });
+};
 
 // 初始化地图的方法
 const initMap = async (element, mapData, mapIndex) => {
   if (!element || mapInstances.value.has(mapIndex)) return;
 
   try {
-    const google = await loader.load();
+    const google = await loadGoogleMapsScript();
     
     // 预先进行所有地理编码操作
     const geocodePromises = mapData.markers?.map(async (markerData) => {
