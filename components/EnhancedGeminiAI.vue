@@ -211,7 +211,7 @@ const handleSend = async () => {
       role: 'user',
       content: prompt
     });
-
+ 
     const response = await fetch(import.meta.env.VITE_WORKER_URL, {
       method: 'POST',
       headers: {
