@@ -3,17 +3,17 @@ import { ENDPOINTS } from '../config/index.js';
 export const youtubeTools = {
   'function_declarations': [{
     'name': 'search_youtube',
-    'description': '搜索YouTube视频并返回相关结果，可用于查找教程、旅游视频等',
+    'description': '搜索YouTube视频并返回相关结果。当用户需要查找视频时使用此函数。',
     'parameters': {
       'type': 'OBJECT',
       'properties': {
         'query': {
           'type': 'STRING',
-          'description': '搜索关键词'
+          'description': '要搜索的关键词'
         },
         'maxResults': {
           'type': 'INTEGER',
-          'description': '返回结果数量(1-5)',
+          'description': '返回的视频数量，范围1-5',
           'minimum': 1,
           'maximum': 5
         }
@@ -54,7 +54,7 @@ export async function handleYouTubeTool(call, env) {
     const data = await response.json();
     
     return {
-      type: 'youtube_results',
+      type: 'youtube',
       kind: data.kind,
       etag: data.etag,
       nextPageToken: data.nextPageToken,

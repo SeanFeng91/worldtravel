@@ -1,5 +1,5 @@
 import { corsHeaders, handleOptions } from './utils/cors.js';
-import { handleYouTubeTool } from './tools/youtube-tool.js';
+import { youtubeTools, handleYouTubeTool } from './tools/youtube-tool.js';
 import { handleMapTool } from './tools/map-tool.js';
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1alpha';  // 使用固定的 endpoint
@@ -36,17 +36,24 @@ export default {
       if (prompt) {
         contents.push({
           role: 'user',
-          parts: [{ text: prompt }]
+          parts: [{ text: youtubeEnabled ? 
+            `${prompt}\n\n注意：如果需要视频资源，请使用 search_youtube 函数搜索。` : 
+            prompt 
+          }]
         });
       }
 
       // 配置工具
+      console.log('Configuring tools:', { searchEnabled, youtubeEnabled, mapEnabled });
+      if (youtubeEnabled) {
+        console.log('YouTube tools configuration:', youtubeTools);
+      }
       const tools = [];
       if (searchEnabled) {
         tools.push({ 'google_search': {} });
       }
       if (youtubeEnabled) {
-        tools.push({ 'web_search': {} });
+        tools.push(youtubeTools);  // 使用 youtube-tool.js 中定义的工具配置
       }
       if (mapEnabled) {
         tools.push({
@@ -106,11 +113,37 @@ export default {
       }
 
       const data = await response.json();
+      
+      // 处理工具调用
+      let toolResults = [];
+      if (data.candidates?.[0]?.content?.parts) {
+        const parts = data.candidates[0].content.parts;
+        console.log('Gemini response parts:', parts);  // 添加日志
+        
+        for (const part of parts) {
+          if (part.functionCall && part.functionCall.name === 'search_youtube') {
+            try {
+              console.log('Processing YouTube function call:', part.functionCall);  // 添加日志
+              const youtubeResult = await handleYouTubeTool(part, env);
+              console.log('YouTube API result:', youtubeResult);  // 添加日志
+              
+              toolResults.push({
+                type: 'youtube',
+                data: youtubeResult
+              });
+            } catch (error) {
+              console.error('YouTube tool error:', error);
+            }
+          }
+        }
+      }
+
+      console.log('Final toolResults:', toolResults);  // 添加日志
 
       return new Response(JSON.stringify({
         success: true,
         data,
-        toolResults: []
+        toolResults
       }), {
         headers: {
           "Content-Type": "application/json",

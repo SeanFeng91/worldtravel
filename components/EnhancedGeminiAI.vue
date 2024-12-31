@@ -428,6 +428,7 @@ const handleSend = async () => {
 
     // 处理工具结果
     if (result.toolResults?.length) {
+      console.log('Processing tool results:', result.toolResults);
       for (const toolResult of result.toolResults) {
         switch (toolResult.type) {
           case 'map':
@@ -435,10 +436,11 @@ const handleSend = async () => {
               await mapRef.value.updateMarkers(toolResult.markers);
             }
             break;
-          case 'youtube_results':
-            if (toolResult.results?.length) {
-              const videoList = toolResult.results
-                .map(video => `- [${video.title}](${video.url})`)
+          case 'youtube':
+            if (toolResult.data?.results?.length) {
+              console.log('Processing YouTube results:', toolResult.data);  // 添加日志
+              const videoList = toolResult.data.results
+                .map(video => `- [${video.snippet.title}](${video.url})`)
                 .join('\n');
               
               currentChat.value.messages.push({
