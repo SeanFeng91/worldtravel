@@ -144,11 +144,15 @@ import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import MarkdownIt from 'markdown-it'
 import PersistentMap from './PersistentMap.vue'
 
-const md = new MarkdownIt()
+const md = new MarkdownIt({
+  html: true,  // 允许 HTML 标签
+  breaks: true,  // 允许换行
+  linkify: true  // 自动转换链接
+})
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 const mapRef = ref(null)
 
-// 添加 renderMarkdown 函数
+// 修改 renderMarkdown 函数
 const renderMarkdown = (text) => {
   if (!text) return '';
   try {
@@ -437,12 +441,28 @@ const handleSend = async () => {
             }
             break;
           case 'youtube':
-            if (toolResult.data?.results?.length) {
-              console.log('Processing YouTube results:', toolResult.data);  // 添加日志
-              const videoList = toolResult.data.results
-                .map(video => `- [${video.snippet.title}](${video.url})`)
-                .join('\n');
+            if (toolResult.data?.videos?.length) {
+              console.log('Processing YouTube results:', toolResult.data);
               
+              // 将所有视频结果合并到一条消息中
+              const videoList = toolResult.data.videos
+                .map(video => `
+<div class="video-card">
+  <a href="${video.url}" target="_blank" class="video-thumbnail">
+    <img src="${video.thumbnailUrl}" alt="${video.title}"/>
+  </a>
+  <div class="video-info">
+    <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
+    <div class="video-meta">
+      <span>📺 ${video.channelTitle}</span>
+      <span>🕒 ${new Date(video.publishedAt).toLocaleDateString('zh-CN')}</span>
+    </div>
+    <p>${video.description.slice(0, 100)}...</p>
+  </div>
+</div>`
+                ).join('\n');
+              
+              // 添加单条包含所有视频的消息
               currentChat.value.messages.push({
                 role: 'assistant',
                 content: `找到以下相关视频：\n${videoList}`
@@ -769,5 +789,95 @@ textarea {
 
 .toggle-item:hover .toggle-tooltip {
   display: block;
+}
+
+:deep(.video-item) {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+}
+
+:deep(.video-item img) {
+  max-width: 320px;
+  height: auto;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+:deep(.video-item h3) {
+  margin: 10px 0;
+}
+
+:deep(.video-item a) {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+:deep(.video-item a:hover) {
+  text-decoration: underline;
+}
+
+:deep(.video-card) {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  margin: 16px 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+:deep(.video-thumbnail) {
+  flex-shrink: 0;
+}
+
+:deep(.video-thumbnail img) {
+  width: 200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+:deep(.video-info) {
+  flex: 1;
+  min-width: 0;
+}
+
+:deep(.video-info h3) {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+:deep(.video-info a) {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+:deep(.video-info a:hover) {
+  text-decoration: underline;
+}
+
+:deep(.video-meta) {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+:deep(.description) {
+  margin: 8px 0 0;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(.channel), :deep(.date) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style> 

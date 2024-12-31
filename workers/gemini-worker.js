@@ -53,7 +53,26 @@ export default {
         tools.push({ 'google_search': {} });
       }
       if (youtubeEnabled) {
-        tools.push(youtubeTools);  // 使用 youtube-tool.js 中定义的工具配置
+        tools.push({
+          functionDeclarations: [{
+            name: "search_youtube",
+            description: "搜索YouTube视频内容",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "搜索关键词"
+                },
+                maxResults: {
+                  type: "integer",
+                  description: "返回结果数量(1-50)"
+                }
+              },
+              required: ["query"]
+            }
+          }]
+        });
       }
       if (mapEnabled) {
         tools.push({
@@ -101,7 +120,7 @@ export default {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-goog-api-key': env.GOOGLE_API_KEY
+          'x-goog-api-key': env.GEMINI_API_KEY
         },
         body: JSON.stringify(requestBody)
       });
@@ -118,21 +137,54 @@ export default {
       let toolResults = [];
       if (data.candidates?.[0]?.content?.parts) {
         const parts = data.candidates[0].content.parts;
-        console.log('Gemini response parts:', parts);  // 添加日志
         
         for (const part of parts) {
           if (part.functionCall && part.functionCall.name === 'search_youtube') {
             try {
-              console.log('Processing YouTube function call:', part.functionCall);  // 添加日志
-              const youtubeResult = await handleYouTubeTool(part, env);
-              console.log('YouTube API result:', youtubeResult);  // 添加日志
+              const { query, maxResults = 5 } = part.functionCall.args;
+              console.log('YouTube search query:', query);
               
+              const youtubeResponse = await fetch(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video&key=${env.GEMINI_API_KEY}`,
+                {
+                  headers: {
+                    'Accept': 'application/json'
+                  }
+                }
+              );
+
+              if (!youtubeResponse.ok) {
+                const errorText = await youtubeResponse.text();
+                console.error('YouTube API error response:', errorText);
+                throw new Error(`YouTube API error: ${youtubeResponse.status} ${errorText}`);
+              }
+
+              const youtubeData = await youtubeResponse.json();
+              console.log('YouTube API response:', youtubeData);
+              
+              const videos = youtubeData.items.map(item => ({
+                title: item.snippet.title,
+                description: item.snippet.description,
+                thumbnailUrl: item.snippet.thumbnails.default.url,
+                videoId: item.id.videoId,
+                channelTitle: item.snippet.channelTitle,
+                publishedAt: item.snippet.publishedAt,
+                url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+              }));
+
               toolResults.push({
                 type: 'youtube',
-                data: youtubeResult
+                data: {
+                  videos,
+                  totalResults: youtubeData.pageInfo.totalResults
+                }
               });
             } catch (error) {
-              console.error('YouTube tool error:', error);
+              console.error('YouTube search error:', error);
+              toolResults.push({
+                type: 'youtube',
+                error: error.message
+              });
             }
           }
         }
