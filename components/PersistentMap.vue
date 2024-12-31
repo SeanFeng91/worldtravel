@@ -51,22 +51,20 @@ const initMap = async () => {
       })
     }
 
-    bounds.value = new window.google.maps.LatLngBounds()
-    
     map.value = new window.google.maps.Map(mapElement.value, {
-      center: { lat: 30, lng: 115 },
-      zoom: 4,
+      center: { lat: 35.6762, lng: 139.6503 }, // 默认中心设在东京
+      zoom: 12,
       mapTypeControl: true,
       streetViewControl: true,
       fullscreenControl: true
     })
 
-    map.value.addListener('click', () => {
-      if (currentInfoWindow.value) {
-        currentInfoWindow.value.close()
-        currentInfoWindow.value = null
-      }
+    // 添加地图加载完成的事件监听
+    google.maps.event.addListenerOnce(map.value, 'idle', () => {
+      console.log('Map fully loaded')
+      google.maps.event.trigger(map.value, 'resize')
     })
+
   } catch (error) {
     console.error('Map initialization error:', error)
   }
@@ -74,74 +72,129 @@ const initMap = async () => {
 
 // 更新地图标记
 const updateMarkers = async (newMarkers) => {
-  if (!map.value) return
+  if (!map.value) {
+    await initMap() // 确保地图已初始化
+  }
 
-  console.log('Updating markers with:', newMarkers);
+  console.log('Updating markers with:', newMarkers)
 
   try {
     const google = window.google
+    
+    // 只在必要时清除现有标记
+    if (markers.value.length > 0) {
+      markers.value.forEach(marker => marker.setMap(null))
+      markers.value = []
+    }
+
     bounds.value = new google.maps.LatLngBounds()
 
-    // 清除现有标记
-    markers.value.forEach(marker => marker.setMap(null))
-    markers.value = []
-
     // 处理新标记
-    for (const markerStr of newMarkers) {
+    for (const markerData of newMarkers) {
       try {
-        // 确保是字符串格式的坐标
-        if (typeof markerStr !== 'string') {
-          console.warn('Invalid marker format:', markerStr);
-          continue;
+        let position
+        let title
+
+        // 如果是地址字符串，直接进行地理编码
+        if (typeof markerData === 'string') {
+          try {
+            const geocoder = new google.maps.Geocoder()
+            const result = await new Promise((resolve, reject) => {
+              geocoder.geocode(
+                { address: markerData },
+                (results, status) => {
+                  if (status === 'OK' && results[0]) {
+                    resolve({
+                      position: results[0].geometry.location,
+                      title: markerData
+                    })
+                  } else {
+                    reject(new Error(`Geocode failed: ${status}`))
+                  }
+                }
+              )
+            })
+            position = result.position
+            title = result.title
+          } catch (error) {
+            console.error('Geocoding error:', error)
+            continue
+          }
+        } else if (typeof markerData === 'object') {
+          if (markerData.address) {
+            try {
+              const geocoder = new google.maps.Geocoder()
+              const result = await new Promise((resolve, reject) => {
+                geocoder.geocode(
+                  { address: markerData.address },
+                  (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                      resolve(results[0].geometry.location)
+                    } else {
+                      reject(new Error(`Geocode failed: ${status}`))
+                    }
+                  }
+                )
+              })
+              position = result
+              title = markerData.address
+            } catch (error) {
+              console.error('Geocoding error:', error)
+              continue
+            }
+          }
         }
 
-        // 解析坐标
-        const [lat, lng] = markerStr.split(',').map(Number);
-        if (isNaN(lat) || isNaN(lng)) {
-          console.warn('Invalid coordinates:', markerStr);
-          continue;
+        if (!position) {
+          console.warn('No valid position found for marker:', markerData)
+          continue
         }
 
-        const position = { lat, lng };
-        console.log('Creating marker at position:', position);
+        console.log('Creating marker at position:', position)
 
         const marker = new google.maps.Marker({
           position,
           map: map.value,
-          title: `${lat},${lng}`,
+          title,
           animation: google.maps.Animation.DROP
-        });
+        })
 
         const infoWindow = new google.maps.InfoWindow({
-          content: `<div style="padding: 8px;">${lat},${lng}</div>`
-        });
+          content: `<div style="padding: 8px;">${title}</div>`
+        })
 
         marker.addListener('click', () => {
           if (currentInfoWindow.value) {
-            currentInfoWindow.value.close();
+            currentInfoWindow.value.close()
           }
-          infoWindow.open(map.value, marker);
-          currentInfoWindow.value = infoWindow;
-        });
+          infoWindow.open(map.value, marker)
+          currentInfoWindow.value = infoWindow
+        })
 
-        markers.value.push(marker);
-        bounds.value.extend(position);
+        markers.value.push(marker)
+        bounds.value.extend(position)
       } catch (error) {
-        console.error('Marker creation error:', error);
+        console.error('Marker creation error:', error)
       }
     }
 
     // 调整地图视野
     if (markers.value.length > 0) {
-      map.value.fitBounds(bounds.value);
+      console.log('Fitting bounds for markers:', markers.value.length)
+      map.value.fitBounds(bounds.value)
+      
+      // 如果只有一个标记，设置适当的缩放级别
       if (markers.value.length === 1) {
-        map.value.setZoom(Math.min(15, map.value.getZoom()));
+        map.value.setZoom(15)
       }
+      
+      // 触发地图重绘
+      google.maps.event.trigger(map.value, 'resize')
     }
   } catch (error) {
-    console.error('Update markers error:', error);
+    console.error('Update markers error:', error)
   }
-};
+}
 
 // 清除所有标记
 const clearMarkers = () => {
@@ -221,7 +274,8 @@ onUnmounted(() => {
 
 <style scoped>
 .map-container {
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 100%;
   height: v-bind('isExpanded ? "800px" : "400px"');
   margin: 10px 0;
@@ -229,6 +283,8 @@ onUnmounted(() => {
   overflow: hidden;
   transition: height 0.3s ease;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+  background: white;
 }
 
 .map {

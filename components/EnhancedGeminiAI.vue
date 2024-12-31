@@ -1,85 +1,45 @@
 <template>
   <div class="enhanced-gemini">
-    <div class="chat-container" ref="chatContainer">
-      <div class="toolbar">
-        <button @click="startNewChat" class="new-chat-btn">
-          <span class="icon">+</span> 新话题
-        </button>
-        
-        <button @click="showSettings = !showSettings" class="settings-btn">
-          <span class="icon">⚙️</span> 参数设置
-        </button>
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <button @click="startNewChat" class="new-chat-btn">
+        <span class="icon">+</span> 新话题
+      </button>
+      
+      <button @click="showSettings = !showSettings" class="settings-btn">
+        <span class="icon">⚙️</span> 参数设置
+      </button>
 
-        <div class="feature-toggles">
-          <label class="toggle-item">
-            <input type="checkbox" v-model="searchEnabled">
-            <span class="toggle-label">搜索</span>
-            <span class="toggle-tooltip">启用后可以获取实时网络信息</span>
-          </label>
+      <div class="feature-toggles">
+        <label class="toggle-item">
+          <input type="checkbox" v-model="searchEnabled">
+          <span class="toggle-label">搜索</span>
+          <span class="toggle-tooltip">启用后可以获取实时网络信息</span>
+        </label>
 
-          <label class="toggle-item">
-            <input type="checkbox" v-model="mapEnabled">
-            <span class="toggle-label">地图</span>
-            <span class="toggle-tooltip">启用后可以在地图上显示位置</span>
-          </label>
+        <label class="toggle-item">
+          <input type="checkbox" v-model="mapEnabled">
+          <span class="toggle-label">地图</span>
+          <span class="toggle-tooltip">启用后可以在地图上显示位置</span>
+        </label>
 
-          <label class="toggle-item">
-            <input type="checkbox" v-model="youtubeEnabled">
-            <span class="toggle-label">视频</span>
-            <span class="toggle-tooltip">启用后可以搜索相关视频</span>
-          </label>
-        </div>
+        <label class="toggle-item">
+          <input type="checkbox" v-model="youtubeEnabled">
+          <span class="toggle-label">视频</span>
+          <span class="toggle-tooltip">启用后可以搜索相关视频</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <!-- 固定地图区域 -->
+      <div class="map-section" v-if="mapEnabled">
+        <PersistentMap ref="mapRef" :mapEnabled="mapEnabled" />
       </div>
 
-      <div v-if="showSettings" class="settings-panel">
-        <div class="setting-item">
-          <label>创造性 (Temperature)</label>
-          <div class="slider-container">
-            <input type="range" v-model="aiSettings.temperature" min="0" max="1" step="0.1">
-            <span class="value">{{ aiSettings.temperature }}</span>
-          </div>
-          <div class="setting-desc">控制回答的创造性和随机性 (0.0-1.0)</div>
-        </div>
-
-        <div class="setting-item">
-          <label>词汇多样性 (Top K)</label>
-          <div class="slider-container">
-            <input type="range" v-model="aiSettings.topK" min="1" max="100" step="1">
-            <span class="value">{{ aiSettings.topK }}</span>
-          </div>
-          <div class="setting-desc">控制词汇选择范围 (1-100)</div>
-        </div>
-
-        <div class="setting-item">
-          <label>输出概率阈值 (Top P)</label>
-          <div class="slider-container">
-            <input type="range" v-model="aiSettings.topP" min="0" max="1" step="0.05">
-            <span class="value">{{ aiSettings.topP }}</span>
-          </div>
-          <div class="setting-desc">控制输出的确定性 (0.0-1.0)</div>
-        </div>
-
-        <div class="setting-item">
-          <label>最大输出长度</label>
-          <div class="slider-container">
-            <input type="range" v-model="aiSettings.maxOutputTokens" 
-                   min="1000" max="8192" step="1000">
-            <span class="value">{{ aiSettings.maxOutputTokens }}</span>
-          </div>
-          <div class="setting-desc">控制回答的最大长度 (1000-8192)</div>
-        </div>
-      </div>
-
-      <div class="content-wrapper">
-        <PersistentMap 
-          v-if="mapEnabled" 
-          ref="mapRef"
-          @map-expand="handleMapExpand"
-          :mapEnabled="mapEnabled"
-          class="map-component"
-        />
-
-        <div class="chat-history" :class="{ 'map-active': mapEnabled, 'map-expanded': isMapExpanded }" ref="chatContainer">
+      <!-- 可滚动的聊天区域 -->
+      <div class="chat-section">
+        <div class="chat-history" ref="chatContainer">
           <div v-if="currentChat.messages.length === 0" class="welcome-message">
             <h2>👋 欢迎使用 Gemini AI 助手</h2>
             <div class="suggestions">
@@ -113,19 +73,18 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="input-area">
-        <textarea 
-          v-model="userInput"
-          placeholder="输入您的问题... (Ctrl + Enter 快速发送)"
-          @keyup.enter.ctrl="handleSend"
-        ></textarea>
-        <div class="controls">
-          <button @click="handleSend" :disabled="isLoading" class="send-btn">
-            <span class="btn-icon">{{ isLoading ? '⏳' : '📤' }}</span>
-            <span class="btn-text">{{ isLoading ? '发送中...' : '发送' }}</span>
-          </button>
+        <div class="input-area">
+          <textarea 
+            v-model="userInput"
+            placeholder="输入您的问题... (Ctrl + Enter 快速发送)"
+            @keyup.enter.ctrl="handleSend"
+          ></textarea>
+          <div class="controls">
+            <button @click="handleSend" :disabled="isLoading" class="send-btn">
+              <span class="btn-icon">{{ isLoading ? '⏳' : '📤' }}</span>
+              <span class="btn-text">{{ isLoading ? '发送中...' : '发送' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -365,6 +324,22 @@ const clearMapData = () => {
   }
 }
 
+// 修改滚动函数，增加平滑滚动效果
+const scrollToBottom = async () => {
+  // 等待下一个 tick，确保消息内容已经渲染
+  await nextTick()
+  // 再等待一个短暂延时，确保 DOM 完全更新
+  await new Promise(resolve => setTimeout(resolve, 50))
+  
+  const container = chatContainer.value
+  if (container) {
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    })
+  }
+}
+
 // 发送消息
 const handleSend = async () => {
   if (!userInput.value.trim() || isLoading.value) return;
@@ -372,11 +347,12 @@ const handleSend = async () => {
   isLoading.value = true;
   const prompt = userInput.value;
   
-  // 先添加用户消息到对话历史
+  // 添加用户消息并滚动
   currentChat.value.messages.push({
     role: 'user',
     content: prompt
   });
+  await scrollToBottom();
   
   userInput.value = '';
 
@@ -424,11 +400,12 @@ const handleSend = async () => {
     // 提取 AI 响应文本
     const aiResponse = result.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // 添加 AI 响应到消息列表
+    // 添加 AI 响应并滚动
     currentChat.value.messages.push({
       role: 'assistant',
       content: aiResponse
     });
+    await scrollToBottom();
 
     // 处理工具结果
     if (result.toolResults?.length) {
@@ -436,8 +413,10 @@ const handleSend = async () => {
       for (const toolResult of result.toolResults) {
         switch (toolResult.type) {
           case 'map':
-            if (mapRef.value) {
-              await mapRef.value.updateMarkers(toolResult.markers);
+            if (mapRef.value && toolResult.markers) {
+              console.log('Updating map markers:', toolResult.markers)
+              await mapRef.value.initMap() // 确保地图已初始化
+              await mapRef.value.updateMarkers(toolResult.markers)
             }
             break;
           case 'youtube':
@@ -467,6 +446,7 @@ const handleSend = async () => {
                 role: 'assistant',
                 content: `找到以下相关视频：\n${videoList}`
               });
+              await scrollToBottom();
             }
             break;
         }
@@ -479,19 +459,12 @@ const handleSend = async () => {
       role: 'error',
       content: `发生错误：${error.message}`
     });
+    await scrollToBottom();
   } finally {
     isLoading.value = false;
+    await scrollToBottom();  // 最后再确保滚动到底部
   }
 };
-
-// 自动滚动到底部
-watch(() => currentChat.value.messages.length, async () => {
-  await nextTick()
-  const container = chatContainer.value
-  if (container) {
-    container.scrollTop = container.scrollHeight
-  }
-})
 
 // 添加发送建议问题的方法
 const sendSuggestion = (question) => {
@@ -518,124 +491,148 @@ watch(mapEnabled, async (newValue) => {
     }
   }
 }, { immediate: true })
+
+// 监听消息变化
+watch(() => currentChat.value.messages, () => {
+  scrollToBottom()
+}, { deep: true })
+
+// 在组件挂载时也滚动到底部
+onMounted(() => {
+  scrollToBottom()
+})
 </script>
 
 <style scoped>
 .enhanced-gemini {
-  height: 100vh;
-  max-height: 900px;
   display: flex;
   flex-direction: column;
-  background: #f5f7f9;
-  border-radius: 12px;
-  border: 1px solid #e0e3e7;
-  overflow: hidden;
-}
-
-.chat-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   gap: 20px;
-  box-sizing: border-box;
-  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  min-height: v-bind('mapEnabled ? "100vh" : "calc(100vh - 200px)"');
+  overflow-y: auto;
 }
 
-.content-wrapper {
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+.map-section {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  flex: none;
+  background: white;
+}
+
+.chat-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  position: relative;
+  min-height: v-bind('mapEnabled ? "400px" : "600px"');
+  max-height: v-bind('mapEnabled ? "calc(100vh - 400px)" : "calc(100vh - 200px)"');
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .chat-history {
-  height: 500px; /* 固定高度 */
-  min-height: 300px;
-  overflow-y: auto;
+  flex: 1;
   padding: 20px;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
-.map-component {
-  width: 100%;
-  height: 400px; /* 固定高度 */
-  margin: 10px 0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+.chat-history::-webkit-scrollbar {
+  width: 8px;
 }
 
-.message {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  max-width: 100%;
-  box-sizing: border-box;
+.chat-history::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-.message.user {
-  background: #e3f2fd;
-  margin-left: 0;
+.chat-history::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-.message.assistant {
-  background: #f5f5f5;
-  margin-right: 0;
-}
-
-.message.error {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.message-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.message-content {
-  line-height: 1.5;
-  word-break: break-word;
+.chat-history::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .input-area {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  flex: none;
   padding: 20px;
-  margin-top: auto;
+  background: white;
+  border-top: 1px solid #eee;
+  z-index: 1;
 }
 
 textarea {
   width: 100%;
   min-height: 60px;
-  max-height: 150px;
+  max-height: 200px;
   padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   resize: vertical;
   font-size: 14px;
   line-height: 1.5;
-  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+textarea:focus {
+  border-color: #1a73e8;
 }
 
 .controls {
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+  gap: 12px;
+}
+
+.send-btn {
+  padding: 12px 24px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.send-btn:hover {
+  background: #1557b0;
+}
+
+.send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.btn-text {
+  font-weight: 500;
 }
 
 .toolbar {
@@ -648,118 +645,6 @@ textarea {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 添加滚动条样式 */
-.scroll-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 欢迎消息样式 */
-.welcome-message {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.welcome-message h2 {
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.suggestions {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.suggestions ul {
-  list-style: none;
-  padding: 0;
-}
-
-.suggestions li {
-  padding: 12px 16px;
-  margin: 8px 0;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.suggestions li:hover {
-  background: #f5f5f5;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* 设置面板样式 */
-.settings-panel {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.setting-item {
-  margin-bottom: 20px;
-}
-
-.setting-item:last-child {
-  margin-bottom: 0;
-}
-
-.slider-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 8px 0;
-}
-
-.setting-desc {
-  font-size: 12px;
-  color: #666;
-}
-
-/* 按钮样式 */
-.send-btn, .new-chat-btn, .settings-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-}
-
-.send-btn {
-  background: #4CAF50;
-  color: white;
-}
-
-.send-btn:hover {
-  background: #45a049;
-}
-
-.send-btn:disabled {
-  background: #cccccc;
-  cursor: not-allowed;
-}
-
-/* Feature toggles 样式 */
 .feature-toggles {
   display: flex;
   gap: 16px;
@@ -879,5 +764,197 @@ textarea {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.welcome-message h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.suggestions {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.suggestions ul {
+  list-style: none;
+  padding: 0;
+}
+
+.suggestions li {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestions li:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.settings-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.setting-item {
+  margin-bottom: 20px;
+}
+
+.setting-item:last-child {
+  margin-bottom: 0;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: #666;
+}
+
+.send-btn, .new-chat-btn, .settings-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.send-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.send-btn:hover {
+  background: #45a049;
+}
+
+.send-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+/* 消息样式 */
+.message {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease;
+  width: 100%; /* 确保容器占满宽度 */
+}
+
+.message.user {
+  align-items: flex-end; /* 将用户消息内容靠右对齐 */
+}
+
+.message.assistant {
+  align-items: flex-start; /* 将助手消息内容靠左对齐 */
+}
+
+.message-header {
+  width: 85%; /* 与消息内容等宽 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.message.user .message-header {
+  justify-content: flex-end; /* 用户消息头部靠右 */
+}
+
+.message-content {
+  width: 85%; /* 限制消息内容宽度 */
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.message.assistant .message-content {
+  width: 95%; /* 助手消息内容宽度更大 */
+  background: #f5f5f5;
+  border-top-left-radius: 4px;
+  color: #333;
+}
+
+.message.user .message-content {
+  background: #e3f2fd;
+  border-top-right-radius: 4px;
+  color: #1565c0;
+}
+
+.message.error .message-content {
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
+}
+
+/* Markdown 内容样式 */
+.message.assistant .markdown-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.message.assistant .markdown-body pre {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.message.assistant .markdown-body code {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  padding: 2px 4px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+
+/* 消息出现动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style> 

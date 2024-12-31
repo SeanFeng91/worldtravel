@@ -26,21 +26,26 @@ export default {
       // 构建对话历史
       const contents = [
         systemPrompt,
-        ...messages.map(msg => ({
+        ...messages.filter(msg => msg.content?.trim()).map(msg => ({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.content }]
         }))
       ];
 
       // 添加当前提示
-      if (prompt) {
+      if (prompt?.trim()) {
         contents.push({
           role: 'user',
-          parts: [{ text: youtubeEnabled ? 
-            `${prompt}\n\n注意：如果需要视频资源，请使用 search_youtube 函数搜索。` : 
-            prompt 
-          }]
+          parts: [{ text: prompt }]
         });
+      } else {
+        console.warn('Empty prompt received');
+        throw new Error('提示内容不能为空');
+      }
+
+      // 在发送请求前检查内容
+      if (!contents.length || !contents.some(content => content.parts?.[0]?.text?.trim())) {
+        throw new Error('对话内容不能为空');
       }
 
       // 配置工具
@@ -135,17 +140,25 @@ export default {
       
       // 处理工具调用
       let toolResults = [];
+      let aiResponse = '';  // 添加变量存储 AI 响应
+
       if (data.candidates?.[0]?.content?.parts) {
         const parts = data.candidates[0].content.parts;
         
         for (const part of parts) {
+          // 收集文本响应
+          if (part.text) {
+            aiResponse += part.text;
+          }
+          
+          // 处理工具调用
           if (part.functionCall && part.functionCall.name === 'search_youtube') {
             try {
               const { query, maxResults = 5 } = part.functionCall.args;
               console.log('YouTube search query:', query);
               
               const youtubeResponse = await fetch(
-                `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video&key=${env.GEMINI_API_KEY}`,
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video&key=${env.GOOGLE_API_KEY}`,
                 {
                   headers: {
                     'Accept': 'application/json'
@@ -194,7 +207,10 @@ export default {
 
       return new Response(JSON.stringify({
         success: true,
-        data,
+        data: {
+          ...data,
+          text: aiResponse  // 添加文本响应
+        },
         toolResults
       }), {
         headers: {
