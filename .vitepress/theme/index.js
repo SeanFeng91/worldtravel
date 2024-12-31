@@ -21,6 +21,7 @@ import GeminiLiveChat from '../../components/GeminiLiveChat.vue'
 import GeminiMap from '../../components/GeminiMap.vue'
 import EnhancedGeminiAI from '../../components/EnhancedGeminiAI.vue'
 import PersistentMap from '../../components/PersistentMap.vue'  
+import PasswordProtected from '../../components/PasswordProtected.vue'
 import './custom.css'
 
 
@@ -43,6 +44,7 @@ export default {
     app.component('GeminiMap', GeminiMap)
     app.component('EnhancedGeminiAI', EnhancedGeminiAI)
     app.component('PersistentMap', PersistentMap)
+    app.component('PasswordProtected', PasswordProtected)
   },
   Layout() {
     return h(DefaultTheme.Layout, null, {

@@ -2,7 +2,14 @@ name = "gemini-worker"
 main = "workers/gemini-worker.js"
 compatibility_date = "2024-01-01"
 
-# 如果需要绑定自定义域名
-# [routes]
-# pattern = "api.yourdomain.com/*"
-# zone_id = "your-zone-id" 
+[vars]
+ENDPOINTS_GEMINI = "https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.0-flash-exp"
+ENDPOINTS_YOUTUBE = "https://youtube.googleapis.com/youtube/v3"
+ENDPOINTS_MAPS = "https://maps.googleapis.com/maps/api"
+
+
+
+[build.upload]
+format = "modules"
+
+# 环境变量已经在 Cloudflare Workers 控制台设置，这里可以省略 

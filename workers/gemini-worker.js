@@ -1,259 +1,120 @@
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1alpha'
+import { corsHeaders, handleOptions } from './utils/cors.js';
+import { handleYouTubeTool } from './tools/youtube-tool.js';
+import { handleMapTool } from './tools/map-tool.js';
 
-// 修改地图工具定义为官方格式
-const mapTools = {
-  'function_declarations': [{
-    'name': 'draw_map',
-    'description': 'Render a Google Maps static map using the specified parameters.',
-    'parameters': {
-      'type': 'OBJECT',
-      'properties': {
-        'center': {
-          'type': 'STRING',
-          'description': 'Location to center the map. It can be a lat,lng pair (e.g. 40.714728,-73.998672), or a string address of a location (e.g. Beijing,China).'
-        },
-        'zoom': {
-          'type': 'NUMBER',
-          'description': 'Google Maps zoom level. 1 is the world, 20 is zoomed in to building level. Integer only. Level 11 shows about a 15km radius.'
-        },
-        'markers': {
-          'type': 'ARRAY',
-          'items': {
-            'type': 'STRING'
-          },
-          'description': 'List of locations to mark on the map. Each marker can include style information.'
-        },
-        'path': {
-          'type': 'STRING',
-          'description': 'Path to draw on the map, including style information and points.'
-        }
-      },
-      'required': ['center', 'zoom']
-    }
-  }]
-};
-
-// 处理工具调用的异步函数
-async function handleToolCalls(toolCalls, env) {
-  const results = [];
-  
-  for (const call of toolCalls) {
-    if (call.functionCall?.name === 'draw_map') {
-      try {
-        // 修复 JSON 解析问题
-        let args;
-        if (typeof call.functionCall.args === 'string') {
-          args = JSON.parse(call.functionCall.args);
-        } else if (typeof call.functionCall.args === 'object') {
-          args = call.functionCall.args;
-        } else {
-          throw new Error('Invalid arguments format');
-        }
-
-        console.log('Raw function call:', call.functionCall); // 调试日志
-        console.log('Parsed args:', args); // 调试日志
-
-        if (!args.center || !args.zoom) {
-          throw new Error('center 和 zoom 参数是必需的');
-        }
-
-        const zoom = Math.max(0, Math.min(21, parseInt(args.zoom)));
-
-        // 使用 Google Maps Geocoding API 处理地址
-        if (typeof args.center === 'string' && !args.center.includes(',')) {
-          const geocodeResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(args.center)}&key=${env.GOOGLE_API_KEY}`
-          );
-          const geocodeData = await geocodeResponse.json();
-          
-          if (geocodeData.status === 'OK') {
-            const location = geocodeData.results[0].geometry.location;
-            args.center = `${location.lat},${location.lng}`;
-          } else {
-            throw new Error(`Geocoding failed: ${geocodeData.status}`);
-          }
-        }
-
-        // 处理标记点的地理编码
-        if (args.markers?.length) {
-          const geocodedMarkers = await Promise.all(
-            args.markers.map(async (marker) => {
-              if (typeof marker === 'string' && !marker.includes(',')) {
-                try {
-                  const markerGeocodeResponse = await fetch(
-                    `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(marker)}&key=${env.GOOGLE_API_KEY}`
-                  );
-                  const markerGeocodeData = await markerGeocodeResponse.json();
-                  
-                  if (markerGeocodeData.status === 'OK') {
-                    const location = markerGeocodeData.results[0].geometry.location;
-                    return `${location.lat},${location.lng}`;
-                  }
-                } catch (error) {
-                  console.error('Marker geocoding error:', error);
-                  return null;
-                }
-              }
-              return marker;
-            })
-          );
-
-          args.markers = geocodedMarkers.filter(marker => marker !== null);
-        }
-
-        results.push({
-          type: 'map',
-          center: args.center,
-          zoom: zoom,
-          markers: args.markers || []
-        });
-      } catch (error) {
-        console.error('Map generation error:', error);
-        console.error('Function call data:', call.functionCall); // 添加更多错误信息
-        throw error;
-      }
-    }
-  }
-  
-  return results;
-}
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1alpha';  // 使用固定的 endpoint
 
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        }
-      });
+      return handleOptions();
     }
 
     try {
-      const { prompt, model, searchEnabled, mapEnabled, messages, settings } = await request.json();
+      const { prompt, messages, settings, searchEnabled, mapEnabled, youtubeEnabled } = await request.json();
 
-      // 验证和规范化设置参数
-      const validatedSettings = {
-        temperature: Math.max(0, Math.min(1, settings?.temperature ?? 0.3)),
-        topK: Math.max(1, Math.min(40, settings?.topK ?? 40)),
-        topP: Math.max(0, Math.min(1, settings?.topP ?? 0.95)),
-        maxOutputTokens: Math.max(1000, Math.min(8192, settings?.maxOutputTokens ?? 8192))
+      // 构建系统提示词
+      const systemPrompt = {
+        role: 'model',
+        parts: [{ text: `你是一个智能助手。
+          ${searchEnabled ? '你可以使用搜索功能获取实时信息。当用户询问新闻、天气、机票等实时信息时，请主动使用搜索功能。' : ''}
+          ${youtubeEnabled ? '你可以搜索相关视频。当用户需要视频资源时，请主动使用视频搜索功能。' : ''}
+          请用中文回答。` 
+        }]
       };
 
-      console.log('Using AI settings:', validatedSettings);
+      // 构建对话历史
+      const contents = [
+        systemPrompt,
+        ...messages.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }]
+        }))
+      ];
 
-      // 构建消息内容
-      const contents = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{
-          text: msg.content
-        }]
-      }));
-
-      // 添加更好的系统提示
-      if (mapEnabled) {
-        contents.unshift({
+      // 添加当前提示
+      if (prompt) {
+        contents.push({
           role: 'user',
-          parts: [{
-            text: `你是一个旅游助手。请先用文字详细回答用户的问题，然后在需要时使用 draw_map 函数来展示位置。
-            例如：
-            1. 先描述这个地方的特点和信息
-            2. 再使用地图展示位置
-            3. 如果涉及多个地点，可以都标记在地图上
-            请确保回答既有信息性又有帮助性。`
+          parts: [{ text: prompt }]
+        });
+      }
+
+      // 配置工具
+      const tools = [];
+      if (searchEnabled) {
+        tools.push({ 'google_search': {} });
+      }
+      if (youtubeEnabled) {
+        tools.push({ 'web_search': {} });
+      }
+      if (mapEnabled) {
+        tools.push({
+          functionDeclarations: [{
+            name: "draw_map",
+            description: "在地图上标记位置点",
+            parameters: {
+              type: "object",
+              properties: {
+                center: {
+                  type: "string",
+                  description: "地图中心点，格式为'纬度,经度'或地址"
+                },
+                zoom: {
+                  type: "number",
+                  description: "地图缩放级别(1-20)"
+                },
+                markers: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "要标记的位置列表，每个位置可以是'纬度,经度'或地址"
+                }
+              },
+              required: ["center", "zoom"]
+            }
           }]
         });
       }
 
       const requestBody = {
         contents,
+        tools,
         generationConfig: {
-          ...validatedSettings,
-          stopSequences: [],
-          candidateCount: 1,
+          temperature: settings?.temperature || 0.7,
+          topK: settings?.topK || 40,
+          topP: settings?.topP || 0.95,
+          maxOutputTokens: settings?.maxOutputTokens || 2048,
         }
       };
 
-      // 添加工具
-      if (mapEnabled || searchEnabled) {
-        requestBody.tools = [];
-        
-        if (mapEnabled) {
-          requestBody.tools.push(mapTools);
-        }
-        
-        if (searchEnabled) {
-          requestBody.tools.push({
-            'google_search': {}
-          });
-        }
-      }
-
-      console.log('Request to Gemini:', JSON.stringify(requestBody, null, 2));
-
-      const response = await fetch(`${GEMINI_API_ENDPOINT}/models/${model}:generateContent`, {
-        method: "POST",
+      // 使用老版本的 endpoint 和路径格式
+      const response = await fetch(`${GEMINI_API_ENDPOINT}/models/gemini-2.0-flash-exp:generateContent`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GOOGLE_API_KEY
+          'Content-Type': 'application/json',
+          'x-goog-api-key': env.GOOGLE_API_KEY
         },
         body: JSON.stringify(requestBody)
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`API error: ${response.status} ${errorText}`);
+      }
+
       const data = await response.json();
-      console.log('Gemini Response:', JSON.stringify(data, null, 2));
 
-      if (data.error) {
-        throw new Error(`API Error: ${data.error.message}`);
-      }
-
-      // 改进响应处理
-      const responseData = {
+      return new Response(JSON.stringify({
         success: true,
-        data: data,
+        data,
         toolResults: []
-      };
-
-      // 处理文本和工具调用
-      if (data.candidates?.[0]?.content?.parts) {
-        const parts = data.candidates[0].content.parts;
-        const textParts = [];
-        const toolCalls = [];
-
-        // 分离文本和工具调用
-        parts.forEach(part => {
-          if (part.text) {
-            textParts.push(part.text);
-          }
-          if (part.functionCall) {
-            toolCalls.push(part);
-          }
-        });
-
-        // 处理工具调用
-        if (toolCalls.length > 0) {
-          try {
-            responseData.toolResults = await handleToolCalls(toolCalls, env);
-          } catch (error) {
-            console.error('Tool call error:', error);
-            // 继续处理文本响应，但记录工具调用错误
-            responseData.toolError = error.message;
-          }
-        }
-
-        // 合并文本响应
-        responseData.data.candidates[0].content.parts = [{
-          text: textParts.join('\n')
-        }];
-      }
-
-      console.log('Final response:', JSON.stringify(responseData, null, 2));
-
-      return new Response(JSON.stringify(responseData), {
+      }), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
+          ...corsHeaders
         }
       });
 
@@ -261,12 +122,13 @@ export default {
       console.error('Worker error:', error);
       return new Response(JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error'
       }), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
+          ...corsHeaders
+        },
+        status: error.status || 500
       });
     }
   }

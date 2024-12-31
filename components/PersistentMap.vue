@@ -22,6 +22,7 @@ const props = defineProps({
   mapEnabled: Boolean
 })
 
+const emit = defineEmits(['map-expand'])
 const mapElement = ref(null)
 const map = ref(null)
 const markers = ref([])
@@ -190,6 +191,14 @@ const fitAllMarkers = () => {
 // 添加切换地图大小的方法
 const toggleMapSize = () => {
   isExpanded.value = !isExpanded.value
+  emit('map-expand', isExpanded.value)
+  // 确保地图重新渲染以适应新的大小
+  if (map.value) {
+    google.maps.event.trigger(map.value, 'resize')
+    if (hasMarkers.value) {
+      fitAllMarkers()
+    }
+  }
 }
 
 // 暴露方法给父组件
@@ -214,11 +223,12 @@ onUnmounted(() => {
 .map-container {
   position: relative;
   width: 100%;
-  height: v-bind('isExpanded ? "600px" : "300px"');
+  height: v-bind('isExpanded ? "800px" : "400px"');
   margin: 10px 0;
   border-radius: 8px;
   overflow: hidden;
   transition: height 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .map {

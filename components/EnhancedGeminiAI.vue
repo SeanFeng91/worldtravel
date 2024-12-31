@@ -1,6 +1,6 @@
 <template>
   <div class="enhanced-gemini">
-    <div class="chat-container">
+    <div class="chat-container" ref="chatContainer">
       <div class="toolbar">
         <button @click="startNewChat" class="new-chat-btn">
           <span class="icon">+</span> 新话题
@@ -21,6 +21,12 @@
             <input type="checkbox" v-model="mapEnabled">
             <span class="toggle-label">地图</span>
             <span class="toggle-tooltip">启用后可以在地图上显示位置</span>
+          </label>
+
+          <label class="toggle-item">
+            <input type="checkbox" v-model="youtubeEnabled">
+            <span class="toggle-label">视频</span>
+            <span class="toggle-tooltip">启用后可以搜索相关视频</span>
           </label>
         </div>
       </div>
@@ -66,11 +72,14 @@
 
       <div class="content-wrapper">
         <PersistentMap 
-          :map-enabled="mapEnabled"
+          v-if="mapEnabled" 
           ref="mapRef"
+          @map-expand="handleMapExpand"
+          :mapEnabled="mapEnabled"
+          class="map-component"
         />
 
-        <div class="chat-history scroll-container" ref="chatContainer">
+        <div class="chat-history" :class="{ 'map-active': mapEnabled, 'map-expanded': isMapExpanded }" ref="chatContainer">
           <div v-if="currentChat.messages.length === 0" class="welcome-message">
             <h2>👋 欢迎使用 Gemini AI 助手</h2>
             <div class="suggestions">
@@ -85,8 +94,8 @@
                 <li @click="sendSuggestion('帮我规划一段3天东京自由行行程，在地图上标记去的地方')">
                   💡 帮我规划一段3天东京自由行行程，在地图上标记去的地方（需要勾选地图选项）
                 </li>
-                <li @click="sendSuggestion('北京今天的天气情况如何')">
-                  📚 北京今天的天气情况如何（需要开启搜索）
+                <li @click="sendSuggestion('找一些关于京都旅游的视频介绍')">
+                  🎥 找一些关于京都旅游的视频介绍（需要开启视频功能）
                 </li>
               </ul>
             </div>
@@ -166,6 +175,7 @@ const isLoading = ref(false)
 const userInput = ref('')
 const searchEnabled = ref(false)
 const mapEnabled = ref(false)
+const youtubeEnabled = ref(false)  // 添加 YouTube 功能开关
 const chatContainer = ref(null)
 
 // AI 参数设置
@@ -182,6 +192,14 @@ const lastToolCall = ref('无')
 
 // 存储地图实例
 const mapInstances = ref(new Map())
+
+// 添加地图展开状态的响应式变量
+const isMapExpanded = ref(false)
+
+// 监听地图展开状态变化
+const handleMapExpand = (expanded) => {
+  isMapExpanded.value = expanded
+}
 
 // 替换 loader 相关代码
 const loadGoogleMapsScript = () => {
@@ -349,15 +367,16 @@ const handleSend = async () => {
   
   isLoading.value = true;
   const prompt = userInput.value;
+  
+  // 先添加用户消息到对话历史
+  currentChat.value.messages.push({
+    role: 'user',
+    content: prompt
+  });
+  
   userInput.value = '';
 
   try {
-    // 添加用户消息
-    currentChat.value.messages.push({
-      role: 'user',
-      content: prompt
-    });
- 
     const response = await fetch(import.meta.env.VITE_WORKER_URL, {
       method: 'POST',
       headers: {
@@ -365,16 +384,34 @@ const handleSend = async () => {
       },
       body: JSON.stringify({
         prompt,
-        model: 'gemini-pro',
+        messages: currentChat.value.messages,
+        settings: aiSettings.value,
         searchEnabled: searchEnabled.value,
         mapEnabled: mapEnabled.value,
-        messages: currentChat.value.messages,
-        settings: aiSettings.value
+        youtubeEnabled: youtubeEnabled.value
       })
     });
 
-    const result = await response.json();
-    console.log('Full API Response:', result);
+    // 检查响应状态
+    if (!response.ok) {
+      let errorMessage = '请求失败';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (e) {
+        errorMessage = await response.text() || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    // 添加 JSON 解析错误处理
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      console.error('JSON 解析错误:', e);
+      throw new Error('响应格式错误');
+    }
 
     if (!result.success) {
       throw new Error(result.error || '请求失败');
@@ -383,83 +420,45 @@ const handleSend = async () => {
     // 提取 AI 响应文本
     const aiResponse = result.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // 添加响应到消息列表
+    // 添加 AI 响应到消息列表
     currentChat.value.messages.push({
       role: 'assistant',
       content: aiResponse
     });
 
-    // 处理地图数据
+    // 处理工具结果
     if (result.toolResults?.length) {
-      const mapData = result.toolResults[0];
-      console.log('Map data received:', mapData);
-      
-      // 初始化地图（如果还没有初始化）
-      if (!mapRef.value?.map) {
-        await mapRef.value?.initMap();
-      }
-
-      // 如果有中心点，使用地理编码设置地图中心
-      if (mapData.center) {
-        try {
-          const geocoder = new google.maps.Geocoder();
-          const response = await new Promise((resolve, reject) => {
-            geocoder.geocode({ address: mapData.center }, (results, status) => {
-              if (status === 'OK' && results[0]) {
-                resolve(results[0].geometry.location);
-              } else {
-                reject(new Error(`Geocoding failed: ${status}`));
-              }
-            });
-          });
-          
-          mapRef.value?.map?.setCenter(response);
-          mapRef.value?.map?.setZoom(mapData.zoom || 12);
-        } catch (error) {
-          console.error('Error geocoding center:', error);
-        }
-      }
-
-      // 处理标记点
-      if (Array.isArray(mapData.markers)) {
-        try {
-          const geocoder = new google.maps.Geocoder();
-          const geocodePromises = mapData.markers.map(location => 
-            new Promise((resolve) => {
-              geocoder.geocode({ address: location }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                  const pos = results[0].geometry.location;
-                  resolve(`${pos.lat()},${pos.lng()}`);
-                } else {
-                  resolve(null);
-                }
+      for (const toolResult of result.toolResults) {
+        switch (toolResult.type) {
+          case 'map':
+            if (mapRef.value) {
+              await mapRef.value.updateMarkers(toolResult.markers);
+            }
+            break;
+          case 'youtube_results':
+            if (toolResult.results?.length) {
+              const videoList = toolResult.results
+                .map(video => `- [${video.title}](${video.url})`)
+                .join('\n');
+              
+              currentChat.value.messages.push({
+                role: 'assistant',
+                content: `找到以下相关视频：\n${videoList}`
               });
-            })
-          );
-
-          const coordinates = (await Promise.all(geocodePromises))
-            .filter(coord => coord !== null);
-
-          console.log('Geocoded coordinates:', coordinates);
-          if (coordinates.length > 0) {
-            await mapRef.value?.updateMarkers(coordinates);
-          }
-        } catch (error) {
-          console.error('Error processing markers:', error);
+            }
+            break;
         }
       }
     }
 
   } catch (error) {
-    console.error('Error in handleSend:', error)
+    console.error('Error in handleSend:', error);
     currentChat.value.messages.push({
       role: 'error',
-      content: '发生错误：' + error.message
-    })
-    // 发生错误时也清除地图数据
-    clearMapData()
+      content: `发生错误：${error.message}`
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 };
 
@@ -491,17 +490,18 @@ const handleMapError = (e) => {
 // 监听 mapEnabled 的变化
 watch(mapEnabled, async (newValue) => {
   if (newValue) {
-    // 确保地图组件已经挂载
     await nextTick()
-    // 初始化地图
-    mapRef.value?.initMap()
+    if (mapRef.value) {
+      mapRef.value.initMap()
+    }
   }
-})
+}, { immediate: true })
 </script>
 
 <style scoped>
 .enhanced-gemini {
-  height: 100%;
+  height: 100vh;
+  max-height: 900px;
   display: flex;
   flex-direction: column;
   background: #f5f7f9;
@@ -521,24 +521,35 @@ watch(mapEnabled, async (newValue) => {
   padding: 20px;
   gap: 20px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  gap: 20px;
+  overflow: hidden;
+  position: relative;
 }
 
 .chat-history {
-  flex: 1;
+  height: 500px; /* 固定高度 */
+  min-height: 300px;
   overflow-y: auto;
   padding: 20px;
   border-radius: 8px;
   background: white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  min-height: 200px;
+  transition: all 0.3s ease;
+}
+
+.map-component {
+  width: 100%;
+  height: 400px; /* 固定高度 */
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .message {
@@ -577,15 +588,19 @@ watch(mapEnabled, async (newValue) => {
 }
 
 .input-area {
+  position: sticky;
+  bottom: 0;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
   padding: 20px;
+  margin-top: auto;
 }
 
 textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 60px;
+  max-height: 150px;
   padding: 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -729,30 +744,28 @@ textarea {
 }
 
 .toggle-item {
-  position: relative;
+  margin-right: 1rem;
   display: flex;
   align-items: center;
-  gap: 8px;
+  position: relative;
 }
 
 .toggle-tooltip {
   position: absolute;
-  top: 100%;
+  bottom: -2rem;
   left: 50%;
   transform: translateX(-50%);
-  padding: 4px 8px;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 0.8rem;
+  display: none;
   white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
+  z-index: 1000;
 }
 
 .toggle-item:hover .toggle-tooltip {
-  opacity: 1;
-  visibility: visible;
+  display: block;
 }
 </style> 

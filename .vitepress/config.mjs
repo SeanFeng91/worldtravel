@@ -25,6 +25,7 @@ export default withMermaid(defineConfig({
       { text: '出行计划', link: '/trip-plan/' },
       // { text: '社区', link: '/community/' },
       { text: '工具', link: '/tools/' },
+      { text: '日志', link: '/log/blog_log.md' },
     ],
     
     sidebar: {
@@ -112,6 +113,16 @@ export default withMermaid(defineConfig({
             { text: '路线优化', link: '/tools/route-optimizer' },
             { text: '世界足迹地图', link: '/tools/visitplace' },
             // { text: '机票和酒店查询', link: '/tools/amadeus-search' }
+          ]
+        }
+      ],
+      '/log/':[
+        {
+          text:'日志',
+          items:[
+            {text:'博客日志',link:'/log/blog_log.md'},
+            {text:'博客想法',link:'/log/blog_idea.md'},
+            {text:'博客问题',link:'/log/blog_bug.md'},
           ]
         }
       ]
