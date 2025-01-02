@@ -23,6 +23,7 @@ export default withMermaid(defineConfig({
       { text: '指南', link: '/guide/getting-started' },
       // { text: '特色板块', link: '/special/' },
       { text: '出行计划', link: '/trip-plan/' },
+      { text: '旅行日志', link: '/trip-history/' },
       // { text: '社区', link: '/community/' },
       { text: '工具', link: '/tools/' },
       { text: '日志', link: '/log/blog_log.md' },
@@ -65,6 +66,22 @@ export default withMermaid(defineConfig({
                 {text:'旅行手册模板',link:'/trip-plan/TravelBlogTemplate'},
               ]
             }
+          ]
+        }
+      ],
+      '/trip-history/':[
+        {
+          text:'国内旅程',
+          collapsed: false,
+          items:[
+            {text:'2025元旦mini现代五项',link:'/trip-history/N01_yuandan'},
+          ]
+        },
+        {
+          text:'国外旅程',
+          collapsed: false,
+          items:[
+            {text:'新西兰旅行婚礼',link:'/trip-history/W01_NewZealand'},
           ]
         }
       ],
