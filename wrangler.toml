@@ -13,3 +13,8 @@ ENDPOINTS_MAPS = "https://maps.googleapis.com/maps/api"
 format = "modules"
 
 # 环境变量已经在 Cloudflare Workers 控制台设置，这里可以省略 
+
+# 添加 KV 配置
+kv_namespaces = [
+  { binding = "TRAVEL_DATA", id = "a12b9591362449f693a97bfa59e9847d" }
+]

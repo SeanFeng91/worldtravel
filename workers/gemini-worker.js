@@ -4,8 +4,103 @@ import { handleMapTool } from './tools/map-tool.js';
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1alpha';  // 使用固定的 endpoint
 
+async function handleTravelData(request, env) {
+  // 处理 OPTIONS 预检请求
+  if (request.method === 'OPTIONS') {
+    return handleOptions()
+  }
+
+  // GET 请求从 URL 参数获取 pageId
+  if (request.method === 'GET') {
+    const url = new URL(request.url)
+    const pageId = url.searchParams.get('pageId')
+
+    if (!pageId) {
+      return new Response(JSON.stringify({ error: 'pageId is required' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      })
+    }
+
+    try {
+      const data = await env.TRAVEL_DATA.get(pageId, { type: 'json' })
+      return new Response(JSON.stringify({ rows: data || [] }), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      })
+    } catch (error) {
+      console.error('KV read error:', error)
+      return new Response(JSON.stringify({ error: 'Failed to read data' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      })
+    }
+  }
+
+  // POST 请求从请求体获取 pageId
+  if (request.method === 'POST') {
+    try {
+      const body = await request.json()
+      console.log('Received POST data:', body)
+
+      const { pageId, rows } = body
+      
+      if (!pageId) {
+        return new Response(JSON.stringify({ 
+          error: 'pageId is required',
+          receivedBody: body
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          }
+        })
+      }
+
+      await env.TRAVEL_DATA.put(pageId, JSON.stringify(rows))
+      
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: '数据保存成功'
+      }), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      })
+    } catch (error) {
+      console.error('Save error:', error)
+      return new Response(JSON.stringify({ 
+        error: 'Failed to save data',
+        details: error.message 
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      })
+    }
+  }
+}
+
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url)
+    
+    if (url.pathname === '/api/travel-data') {
+      return handleTravelData(request, env)
+    }
+    
     if (request.method === "OPTIONS") {
       return handleOptions();
     }

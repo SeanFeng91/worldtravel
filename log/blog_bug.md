@@ -8,5 +8,6 @@
 - Gemini-2.0前端样式现在很多bug。也不美观，毕竟在一个blog里面不好发挥。看可不可以地图、视频、搜索单独做个页面。
 - Gemini-2.0地图显示功能最后一个添加Markers的似乎要重新修复一下。
 - Youtube搜索功能尽可能重新从gemini-worker.js中分离到Youtube-tools.js中。
+- 无法通过toml部署管理KV数据库。
 
 ## ☆
