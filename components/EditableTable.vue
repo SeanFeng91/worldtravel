@@ -162,25 +162,10 @@
           <span class="file-size">{{ formatFileSize(file.size) }}</span>
         </div>
         <div class="attachment-actions">
-          <button class="action-btn preview-btn" @click="previewFile(file)">查看</button>
+          <button class="action-btn preview-btn" @click="previewFile(file)">
+            {{ isImageFile(file.type) ? '查看' : '下载' }}
+          </button>
           <button v-if="isEditable" @click="deleteFile(file)" class="action-btn delete-btn">删除</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 图片预览区域 -->
-    <div class="image-preview" v-if="unusedAttachments.length">
-      <div v-for="image in unusedAttachments" :key="image.key" class="image-item">
-        <div class="image-container">
-          <img 
-            :src="image.url" 
-            :alt="image.name"
-            @error="handleImageError"
-          >
-        </div>
-        <div class="image-actions">
-          <button class="action-btn preview-btn" @click="previewImage(image.url)">查看</button>
-          <button v-if="isEditable" @click="deleteImage(image)" class="action-btn delete-btn">删除</button>
         </div>
       </div>
     </div>
@@ -335,11 +320,12 @@ const acceptedFileTypes = '.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx'
 
 // 检查文件类型
 const isImageFile = (fileType) => {
-  return fileType.startsWith('image/')
+  return fileType?.startsWith('image/')
 }
 
 // 获取文件图标
 const getFileIcon = (fileType) => {
+  if (!fileType) return 'fas fa-file'
   if (fileType.includes('pdf')) return 'fas fa-file-pdf'
   if (fileType.includes('word') || fileType.includes('doc')) return 'fas fa-file-word'
   if (fileType.includes('sheet') || fileType.includes('excel')) return 'fas fa-file-excel'
@@ -676,7 +662,7 @@ const unusedAttachments = computed(() => {
   return attachments.value.filter(attachment => !usedImageUrls.has(attachment.url))
 })
 
-// 预览文件
+// 预览或下载文件
 const previewFile = (file) => {
   if (!file.url) return
   
@@ -684,8 +670,11 @@ const previewFile = (file) => {
     // 图片预览
     window.open(file.url, '_blank', 'noopener,noreferrer')
   } else {
-    // 其他文件下载或在新标签页打开
-    window.open(file.url, '_blank')
+    // 其他文件下载
+    const a = document.createElement('a')
+    a.href = file.url
+    a.download = file.name
+    a.click()
   }
 }
 </script>
@@ -968,6 +957,7 @@ td {
   justify-content: center;
   background: #f5f5f5;
   border-radius: 4px;
+  padding: 1rem;
 }
 
 .preview-image {
@@ -977,14 +967,19 @@ td {
 }
 
 .file-icon {
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: #666;
+}
+
+.file-icon i {
+  opacity: 0.8;
 }
 
 .attachment-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding: 0.5rem;
 }
 
 .file-name {
@@ -1026,69 +1021,6 @@ td {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.image-preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.image-item {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.image-container {
-  position: relative;
-  padding-top: 75%;
-  background: #f5f5f5;
-}
-
-.image-container img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.image-error::after {
-  content: '图片加载失败';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #f44336;
-}
-
-.image-actions {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: #f5f5f5;
-}
-
-.action-btn {
-  flex: 1;
-  padding: 4px 8px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.preview-btn {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.delete-btn {
-  background-color: #f44336;
-  color: white;
 }
 
 .image-cell {
