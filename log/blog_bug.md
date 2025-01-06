@@ -9,5 +9,5 @@
 - Gemini-2.0地图显示功能最后一个添加Markers的似乎要重新修复一下。
 - Youtube搜索功能尽可能重新从gemini-worker.js中分离到Youtube-tools.js中。
 - 无法通过toml部署管理KV数据库。
-
+- 暗色主题估计还有很多配色的问题
 ## ☆

@@ -1,5 +1,57 @@
 # WorldTravel 博客日志
 
+## 2025-01-05
+### KV的wrangler部署代码
+- 之前根据官方文档，KV的wrangler部署代码如下：
+```
+kv_namespaces = [
+{ binding = "TRAVEL_DATA", id = "a12b9591362449f693a97bxxxxxxxxxx" }
+]
+```
+但是一直都无法正常部署，即使使用 wrangler deploy --keep-vars也未能保留原有通过网页端配置的kv库。
+早上参考配置成功的D1和R2的写法，一下子成功了：
+```
+[[kv_namespaces]]
+binding = "TRAVEL_DATA"
+id = "a12b9591362449f693a97bxxxxxxxxxx"
+```
+### 表格组建
+```vue
+<EditableTable 
+  pageId="trip-2025-01-xxxx" 
+  tableId="schedule"
+  :headers="['时间', '地点', '活动', '费用', '备注']"
+  :columnConfig="{
+    '时间': { 
+      type: 'datetime',
+      placeholder: '请选择时间'
+    },
+    '地点': { 
+      type: 'text',
+      placeholder: '请输入地点'
+    },
+    '活动': { 
+      type: 'text',
+      placeholder: '请输入活动内容'
+    },
+    '费用': { 
+      type: 'number',
+      min: 0,
+      decimals: 2,
+      placeholder: '请输入费用'
+    },
+    '备注': { 
+      type: 'text',
+      placeholder: '可选'
+    }
+  }"
+/>
+```
+- 考虑了日期、数字的输入
+- 考虑列宽调整
+- 考虑表格的编辑和保存，需要密码才可以编辑
+
+
 ## 2025-01-03
 为了方便编辑表格，我尝试设计了一个表格组件，在需要的日志可以插入。同时尝试使用Cloudflare的KV来存储数据，目前可以正常保存和读取。但是在toml部署的时候，无法正确的binding。所以每次需要手动在页面端设置。
 

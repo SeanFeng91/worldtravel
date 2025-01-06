@@ -5,9 +5,35 @@ import EditableTable from '../components/EditableTable.vue'
 非常充实的一天。约了GPY和CLH夫妇，本着**新年登高新气象**的出发点，我们规划一天的旅行。
 # 元旦行程
 
+
 <EditableTable 
   pageId="trip-2025-01-yuandan" 
+  tableId="schedule"
   :headers="['时间', '地点', '活动', '费用', '备注']"
+  :columnConfig="{
+    '时间': { 
+      type: 'datetime',
+      placeholder: '请选择时间'
+    },
+    '地点': { 
+      type: 'text',
+      placeholder: '请输入地点'
+    },
+    '活动': { 
+      type: 'text',
+      placeholder: '请输入活动内容'
+    },
+    '费用': { 
+      type: 'number',
+      min: 0,
+      decimals: 2,
+      placeholder: '请输入费用'
+    },
+    '备注': { 
+      type: 'text',
+      placeholder: '可选'
+    }
+  }"
 />
 
 ```mermaid
@@ -45,4 +71,3 @@ flowchart LR
 
 
 
-【需要有一个方便插入的表格模板，不然写md的效率太低了？】
