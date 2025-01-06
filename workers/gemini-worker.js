@@ -10,6 +10,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     
+    // 处理 R2 图片请求 - 确保这个路由在最前面
+    if (url.pathname.startsWith('/images/')) {
+      return handleR2Image(request, env)
+    }
+
     if (url.pathname === '/api/travel-data') {
       return handleKVData(request, env)
     }
@@ -248,5 +253,60 @@ export default {
         status: error.status || 500
       });
     }
+  }
+}
+
+// 处理 R2 图片请求
+async function handleR2Image(request, env) {
+  try {
+    const url = new URL(request.url)
+    const key = decodeURIComponent(url.pathname.replace('/images/', ''))
+    
+    console.log('Fetching image with key:', key)  // 添加日志
+
+    const object = await env.TRAVEL_IMAGES.get(key)
+    
+    if (!object) {
+      console.error('Image not found:', key)
+      return new Response('Image not found', { 
+        status: 404,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'text/plain'
+        }
+      })
+    }
+
+    const headers = new Headers()
+    object.writeHttpMetadata(headers)
+    headers.set('etag', object.httpEtag)
+    headers.set('Access-Control-Allow-Origin', '*')
+    headers.set('Cache-Control', 'public, max-age=31536000')
+    
+    if (!headers.get('Content-Type')) {
+      // 根据文件扩展名设置 Content-Type
+      const ext = key.split('.').pop().toLowerCase()
+      const contentTypes = {
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+      }
+      headers.set('Content-Type', contentTypes[ext] || 'application/octet-stream')
+    }
+
+    return new Response(object.body, {
+      headers
+    })
+  } catch (error) {
+    console.error('获取图片失败:', error)
+    return new Response('Error fetching image', { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'text/plain'
+      }
+    })
   }
 }

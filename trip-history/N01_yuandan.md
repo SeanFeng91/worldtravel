@@ -9,7 +9,7 @@ import EditableTable from '../components/EditableTable.vue'
 <EditableTable 
   pageId="trip-2025-01-yuandan" 
   tableId="schedule"
-  :headers="['时间', '地点', '活动', '费用', '备注']"
+  :headers="['时间', '地点', '活动', '图片', '费用', '备注']"
   :columnConfig="{
     '时间': { 
       type: 'datetime',
@@ -22,6 +22,10 @@ import EditableTable from '../components/EditableTable.vue'
     '活动': { 
       type: 'text',
       placeholder: '请输入活动内容'
+    },
+    '图片': {  // 添加图片列配置
+      type: 'image',
+      placeholder: '点击上传图片'
     },
     '费用': { 
       type: 'number',

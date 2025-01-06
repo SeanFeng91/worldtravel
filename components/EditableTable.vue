@@ -20,44 +20,74 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in tableData" :key="index">
+          <tr v-for="(row, rowIndex) in tableData" :key="rowIndex">
             <td v-for="header in props.headers" :key="header" 
                 :class="getColumnClass(header)">
-              <!-- 根据编辑权限显示不同的内容 -->
+              <!-- 编辑模式 -->
               <template v-if="isEditable">
+                <!-- 日期时间类型的单元格 -->
                 <input
-                  v-if="columnTypes[header] === 'number'"
-                  type="text"
-                  :value="row[header]"
-                  @input="handleNumberInput($event, row, header)"
-                  @blur="formatNumberOnBlur(row, header)"
-                  :placeholder="getPlaceholder(header)"
-                  class="input-field"
-                >
-                <input
-                  v-else-if="columnTypes[header] === 'datetime'"
+                  v-if="columnTypes[header] === 'datetime'"
                   type="datetime-local"
                   v-model="row[header]"
-                  :max="maxDate"
                   :min="minDate"
-                  class="input-field"
+                  :max="maxDate"
+                  :placeholder="getPlaceholder(header)"
+                  class="datetime-input"
                 >
-                <textarea
+                <!-- 图片类型的单元格 -->
+                <div v-else-if="columnTypes[header] === 'image'" class="image-cell">
+                  <img 
+                    v-if="row[header]" 
+                    :src="row[header]" 
+                    @error="handleImageError"
+                    class="cell-image"
+                  >
+                  <input
+                    type="file"
+                    :ref="el => setFileInputRef(el, rowIndex, header)"
+                    @change="e => handleCellImageChange(e, rowIndex, header)"
+                    accept="image/*"
+                    class="hidden"
+                  >
+                  <button 
+                    @click="triggerFileInput('cell', rowIndex, header)"
+                    class="upload-btn small"
+                  >
+                    {{ row[header] ? '更换图片' : '上传图片' }}
+                  </button>
+                </div>
+                <!-- 其他类型的单元格 -->
+                <input
                   v-else
                   v-model="row[header]"
+                  :type="columnTypes[header] || 'text'"
                   :placeholder="getPlaceholder(header)"
-                  class="input-field textarea-field"
-                  rows="1"
-                  @input="autoGrow($event.target)"
-                ></textarea>
+                >
               </template>
+              <!-- 非编辑模式 -->
               <template v-else>
-                <!-- 只读模式 -->
-                <span class="readonly-text">{{ formatDisplayValue(row[header], header) }}</span>
+                <!-- 日期时间类型的单元格 -->
+                <div v-if="columnTypes[header] === 'datetime'">
+                  {{ formatDisplayValue(row[header], header) }}
+                </div>
+                <!-- 图片类型的单元格 -->
+                <div v-else-if="columnTypes[header] === 'image'" class="image-cell">
+                  <img 
+                    v-if="row[header]" 
+                    :src="row[header]" 
+                    @error="handleImageError"
+                    @click="() => previewImage(row[header])"
+                    class="cell-image"
+                  >
+                  <span v-else>-</span>
+                </div>
+                <!-- 其他类型的单元格 -->
+                <span v-else>{{ formatDisplayValue(row[header], header) }}</span>
               </template>
             </td>
             <td v-if="isEditable" class="action-column">
-              <button @click="removeRow(index)" class="delete-btn" title="删除">×</button>
+              <button @click="removeRow(rowIndex)" class="delete-btn" title="删除">×</button>
             </td>
           </tr>
         </tbody>
@@ -94,28 +124,63 @@
       </div>
     </div>
 
-    <!-- 图片上传区域 -->
-    <div v-if="isEditable" class="image-upload">
-      <input 
+    <!-- 附件上传按钮 -->
+    <div v-if="isEditable" class="upload-section">
+      <input
         type="file"
-        ref="fileInput"
+        ref="attachmentFileInput"
         @change="handleFileChange"
-        accept="image/*"
+        :accept="acceptedFileTypes"
         multiple
-        class="file-input"
+        class="hidden"
       >
-      <button @click="triggerFileInput" class="upload-btn">
-        <i class="fas fa-cloud-upload-alt"></i> 上传图片
+      <button @click="triggerFileInput('attachment')" class="upload-btn">
+        上传附件
       </button>
+      <span class="file-types">支持: 图片、PDF、Word、Excel 等</span>
+    </div>
+
+    <!-- 附件预览区域 -->
+    <div class="attachments-preview" v-if="unusedAttachments.length">
+      <div v-for="file in unusedAttachments" :key="file.key" class="attachment-item">
+        <div class="attachment-container">
+          <!-- 图片预览 -->
+          <img 
+            v-if="isImageFile(file.type)" 
+            :src="file.url" 
+            :alt="file.name"
+            @error="handleImageError"
+            class="preview-image"
+          >
+          <!-- 文档图标 -->
+          <div v-else class="file-icon">
+            <i :class="getFileIcon(file.type)"></i>
+          </div>
+        </div>
+        <div class="attachment-info">
+          <span class="file-name" :title="file.name">{{ file.name }}</span>
+          <span class="file-size">{{ formatFileSize(file.size) }}</span>
+        </div>
+        <div class="attachment-actions">
+          <button class="action-btn preview-btn" @click="previewFile(file)">查看</button>
+          <button v-if="isEditable" @click="deleteFile(file)" class="action-btn delete-btn">删除</button>
+        </div>
+      </div>
     </div>
 
     <!-- 图片预览区域 -->
-    <div class="image-preview">
-      <div v-for="image in attachments" :key="image.key" class="image-item">
-        <img :src="image.url" :alt="image.name">
+    <div class="image-preview" v-if="unusedAttachments.length">
+      <div v-for="image in unusedAttachments" :key="image.key" class="image-item">
+        <div class="image-container">
+          <img 
+            :src="image.url" 
+            :alt="image.name"
+            @error="handleImageError"
+          >
+        </div>
         <div class="image-actions">
-          <a :href="image.url" target="_blank" class="preview-btn">查看</a>
-          <button v-if="isEditable" @click="deleteImage(image)" class="delete-btn">删除</button>
+          <button class="action-btn preview-btn" @click="previewImage(image.url)">查看</button>
+          <button v-if="isEditable" @click="deleteImage(image)" class="action-btn delete-btn">删除</button>
         </div>
       </div>
     </div>
@@ -139,7 +204,6 @@ const API_BASE = import.meta.env.VITE_WORKER_URL
 const tableData = ref([])
 const attachments = ref([])
 const selectedFile = ref(null)
-const fileInput = ref(null)
 
 // 定义列类型
 const columnTypes = computed(() => {
@@ -214,15 +278,15 @@ const autoGrow = (element) => {
 }
 
 // 日期范围限制
-const maxDate = computed(() => {
-  const date = new Date()
-  date.setFullYear(date.getFullYear() + 1) // 允许未来一年
-  return date.toISOString().slice(0, 16)
-})
-
 const minDate = computed(() => {
   const date = new Date()
   date.setFullYear(date.getFullYear() - 5) // 允许过去五年
+  return date.toISOString().slice(0, 16)
+})
+
+const maxDate = computed(() => {
+  const date = new Date()
+  date.setFullYear(date.getFullYear() + 5) // 允许未来五年
   return date.toISOString().slice(0, 16)
 })
 
@@ -245,55 +309,102 @@ const isImage = (fileType) => {
   return fileType.startsWith('image/')
 }
 
-// 处理文件选择
+// 文件输入引用
+const fileInputRefs = ref({})
+const attachmentFileInput = ref(null)
+
+// 设置文件输入引用
+const setFileInputRef = (el, rowIndex, header) => {
+  if (!fileInputRefs.value[rowIndex]) {
+    fileInputRefs.value[rowIndex] = {}
+  }
+  fileInputRefs.value[rowIndex][header] = el
+}
+
+// 统一的文件选择触发函数
+const triggerFileInput = (type, rowIndex = null, header = null) => {
+  if (type === 'attachment') {
+    attachmentFileInput.value?.click()
+  } else if (type === 'cell') {
+    fileInputRefs.value[rowIndex]?.[header]?.click()
+  }
+}
+
+// 定义接受的文件类型
+const acceptedFileTypes = '.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx'
+
+// 检查文件类型
+const isImageFile = (fileType) => {
+  return fileType.startsWith('image/')
+}
+
+// 获取文件图标
+const getFileIcon = (fileType) => {
+  if (fileType.includes('pdf')) return 'fas fa-file-pdf'
+  if (fileType.includes('word') || fileType.includes('doc')) return 'fas fa-file-word'
+  if (fileType.includes('sheet') || fileType.includes('excel')) return 'fas fa-file-excel'
+  return 'fas fa-file'
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
+}
+
+// 处理附件上传
 const handleFileChange = async (event) => {
   const files = event.target.files
   if (!files.length) return
 
   for (const file of files) {
-    if (!file.type.startsWith('image/')) {
-      alert('只能上传图片文件')
-      continue
-    }
-
     try {
       await uploadFile(file)
+      await loadData()
     } catch (error) {
       console.error('上传失败:', error)
       alert(`上传失败: ${file.name}`)
     }
   }
   
-  // 清空文件选择，允许重复选择同一文件
   event.target.value = ''
 }
 
-// 上传文件
+// 处理文件上传
 const uploadFile = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('pageId', props.pageId)
   formData.append('tableId', props.tableId)
 
-  const response = await fetch(`${API_BASE}/api/table-data/upload`, {
+  // 使用新的文件上传接口
+  const url = `${API_BASE}/api/table-data/upload-file`.replace(/\/+/g, '/')
+  const response = await fetch(url, {
     method: 'POST',
     body: formData
   })
 
   if (!response.ok) {
-    throw new Error('上传失败')
+    const error = await response.json()
+    throw new Error(error.error || '上传失败')
   }
 
-  // 刷新数据
-  await loadData()
+  const result = await response.json()
+  if (!result.success || !result.file) {
+    throw new Error('上传返回数据格式错误')
+  }
+
+  return result.file
 }
 
 // 删除图片
 const deleteImage = async (image) => {
-  if (!confirm('确定要删除这张图片吗？')) return
-
   try {
-    const response = await fetch(`${API_BASE}/api/table-data/delete-image`, {
+    const url = `${API_BASE}/api/table-data/delete-image`.replace(/\/+/g, '/')
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -306,7 +417,8 @@ const deleteImage = async (image) => {
     })
 
     if (!response.ok) {
-      throw new Error('删除失败')
+      const error = await response.json()
+      throw new Error(error.error || '删除失败')
     }
 
     // 刷新数据
@@ -339,7 +451,7 @@ const saveData = async () => {
     formData.append('tableId', props.tableId)
     formData.append('data', JSON.stringify(validData))
 
-    const url = `${API_BASE}/api/table-data`
+    const url = `${API_BASE}/api/table-data`.replace(/\/+/g, '/')
     const response = await fetch(url, {
       method: 'POST',
       body: formData
@@ -379,6 +491,9 @@ const loadData = async () => {
     const data = await response.json()
     tableData.value = data.rows || []
     attachments.value = data.attachments || []
+    
+    // 打印附件信息以便调试
+    console.log('加载的附件:', attachments.value)
   } catch (error) {
     console.error('加载数据失败:', error)
   }
@@ -455,12 +570,122 @@ const formatDisplayValue = (value, header) => {
   if (columnTypes.value[header] === 'number') {
     return formatNumber(value, header)
   }
+  if (columnTypes.value[header] === 'datetime') {
+    // 格式化日期时间显示
+    try {
+      const date = new Date(value)
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch (e) {
+      return value
+    }
+  }
   return value
 }
 
-// 触发文件选择
-const triggerFileInput = () => {
-  fileInput.value.click()
+// 预览图片
+const previewImage = (imageUrl) => {
+  if (!imageUrl) return
+  
+  // 确保 URL 是完整的
+  const fullUrl = imageUrl.startsWith('http') 
+    ? imageUrl 
+    : `${API_BASE}${imageUrl}`.replace(/\/+/g, '/')
+    
+  console.log('预览图片:', fullUrl) // 添加调试日志
+  window.open(fullUrl, '_blank', 'noopener,noreferrer')
+}
+
+// 处理图片加载错误
+const handleImageError = (event) => {
+  const img = event.target
+  console.error('图片加载失败:', img.src)
+  
+  if (!img.dataset.retried) {
+    img.dataset.retried = 'true'
+    // 尝试添加时间戳来避免缓存
+    img.src = img.src + '?retry=' + Date.now()
+  } else {
+    img.style.display = 'none'
+    img.parentElement.classList.add('image-error')
+  }
+}
+
+// 处理单元格图片上传
+const handleCellImageChange = async (event, rowIndex, header) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    alert('只能上传图片文件')
+    return
+  }
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('pageId', props.pageId)
+    formData.append('tableId', props.tableId)
+    formData.append('cellId', `${rowIndex}-${header}`)
+
+    // 使用单元格图片上传接口
+    const url = `${API_BASE}/api/table-data/upload-cell-image`.replace(/\/+/g, '/')
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || '上传失败')
+    }
+
+    const result = await response.json()
+    if (result.success && result.file && result.file.url) {
+      tableData.value[rowIndex][header] = result.file.url
+    } else {
+      throw new Error('上传返回数据格式错误')
+    }
+  } catch (error) {
+    console.error('上传失败:', error)
+    alert('上传失败: ' + error.message)
+  }
+
+  event.target.value = ''
+}
+
+// 计算未使用的附件
+const unusedAttachments = computed(() => {
+  // 获取所有表格中使用的图片 URL
+  const usedImageUrls = new Set()
+  tableData.value.forEach(row => {
+    props.headers.forEach(header => {
+      if (columnTypes.value[header] === 'image' && row[header]) {
+        usedImageUrls.add(row[header])
+      }
+    })
+  })
+
+  // 返回未在表格中使用的附件
+  return attachments.value.filter(attachment => !usedImageUrls.has(attachment.url))
+})
+
+// 预览文件
+const previewFile = (file) => {
+  if (!file.url) return
+  
+  if (isImageFile(file.type)) {
+    // 图片预览
+    window.open(file.url, '_blank', 'noopener,noreferrer')
+  } else {
+    // 其他文件下载或在新标签页打开
+    window.open(file.url, '_blank')
+  }
 }
 </script>
 
@@ -703,80 +928,226 @@ td {
   }
 }
 
-.image-upload {
-  margin: 16px 0;
+.hidden {
+  display: none;
 }
 
-.file-input {
-  display: none;
+.upload-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.file-types {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.attachments-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.attachment-item {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attachment-container {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.file-icon {
+  font-size: 2rem;
+  color: #666;
+}
+
+.attachment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.attachment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 暗色主题适配 */
+:root[data-theme="dark"] .attachment-item {
+  border-color: #444;
+  background: #2c2c2c;
+}
+
+:root[data-theme="dark"] .attachment-container {
+  background: #1c1c1c;
+}
+
+:root[data-theme="dark"] .file-types,
+:root[data-theme="dark"] .file-size {
+  color: #999;
 }
 
 .upload-btn {
   padding: 8px 16px;
-  background-color: #2196F3;
+  background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .image-preview {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .image-item {
-  position: relative;
-  border-radius: 4px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.image-item img {
+.image-container {
+  position: relative;
+  padding-top: 75%;
+  background: #f5f5f5;
+}
+
+.image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 150px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-error::after {
+  content: '图片加载失败';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #f44336;
 }
 
 .image-actions {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 8px;
-  background: rgba(0,0,0,0.7);
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f5f5f5;
 }
 
-.image-item:hover .image-actions {
-  opacity: 1;
-}
-
-.preview-btn, .delete-btn {
+.action-btn {
+  flex: 1;
   padding: 4px 8px;
-  border-radius: 4px;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .preview-btn {
   background-color: #4CAF50;
   color: white;
-  text-decoration: none;
 }
 
 .delete-btn {
   background-color: #f44336;
   color: white;
+}
+
+.image-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px;
+}
+
+.cell-image {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s;
+  padding: 2px;
+  border: 1px solid #ddd;
+}
+
+.cell-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 暗色主题适配 */
+:root[data-theme="dark"] .cell-image {
+  background: #2c2c2c;
+  border: 1px solid #444;
+}
+
+.image-error {
+  color: #f44336;
+  font-size: 12px;
+  text-align: center;
+}
+
+.upload-btn.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.datetime-input {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.datetime-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* 暗色主题适配 */
+:root[data-theme="dark"] .datetime-input {
+  background-color: #2c2c2c;
+  border-color: #444;
+  color: #fff;
 }
 </style>

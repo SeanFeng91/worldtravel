@@ -23,5 +23,6 @@ database_id = "5bd81e9a-d0ad-4fe6-a5c8-dce03ccb0266"
 
 # R2 存储桶绑定
 [[r2_buckets]]
-binding = "travel-images"
+binding = "TRAVEL_IMAGES"
 bucket_name = "travel-images"
+preview_bucket_name = "travel-images-dev"
