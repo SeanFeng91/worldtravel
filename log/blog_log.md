@@ -18,9 +18,9 @@ id = "a12b9591362449f693a97bxxxxxxxxxx"
 ### 表格组建
 ```vue
 <EditableTable 
-  pageId="trip-2025-01-xxxx" 
+  pageId="trip-2025-01-yuandan" 
   tableId="schedule"
-  :headers="['时间', '地点', '活动', '费用', '备注']"
+  :headers="['时间', '地点', '活动', '图片', '费用', '备注']"
   :columnConfig="{
     '时间': { 
       type: 'datetime',
@@ -33,6 +33,10 @@ id = "a12b9591362449f693a97bxxxxxxxxxx"
     '活动': { 
       type: 'text',
       placeholder: '请输入活动内容'
+    },
+    '图片': {  // 添加图片列配置
+      type: 'image',
+      placeholder: '点击上传图片'
     },
     '费用': { 
       type: 'number',
@@ -50,6 +54,79 @@ id = "a12b9591362449f693a97bxxxxxxxxxx"
 - 考虑了日期、数字的输入
 - 考虑列宽调整
 - 考虑表格的编辑和保存，需要密码才可以编辑
+- 考虑了图片列的编辑和保存
+- 考虑了其他文件附件的上传，但是现在这个附件是依赖于表格的。
+
+## 具体功能函数总结
+::: details
+### 核心功能实现
+
+**1. 表格基础功能**
+- 动态渲染表格数据 (`tableData.value` 响应式数据)
+- 通过 `addRow()` 和 `removeRow(rowIndex)` 实现行的增删
+- 使用 `v-model` 实现单元格实时编辑
+- 通过 `handleUnlock()` 实现密码保护的编辑功能
+
+**2. 文件管理功能**
+- `handleFileChange()` 处理多种类型文件上传
+- `previewFile(file)` 根据文件类型智能处理预览/下载
+- `deleteFile(file)` 实现文件删除
+- `handleCellImageChange()` 处理图片类型单元格的特殊上传
+
+**3. 数据持久化**
+- `handleTableContent()` 管理 KV 中的表格数据
+- `handleFileUpload()` 处理 R2 中的文件存储
+- `loadData()` 实现数据自动同步和更新
+
+### 技术特点
+
+**1. 数据处理**
+- `unusedAttachments` 计算属性过滤重复文件
+- `formatDisplayValue()` 处理不同类型数据的显示格式
+- `getColumnTotal()` 实现数值列的自动合计
+
+**2. 文件处理**
+- `isImageFile()` 判断文件类型
+- `formatFileSize()` 格式化文件大小显示
+- `getFileIcon()` 根据文件类型显示对应图标
+
+**3. 安全性**
+- 文件上传前的类型和大小验证
+- 密码保护的编辑权限控制
+- CORS 安全配置
+
+### 存储设计
+
+**1. KV 存储**
+- 使用 `${pageId}:${tableId}` 作为唯一键
+- 存储表格数据和文件元数据
+- 支持数据版本控制
+
+**2. R2 存储**
+- 使用 `${pageId}/${tableId}/${timestamp}_${filename}` 的文件路径结构
+- 支持文件的 MIME 类型存储
+- 实现文件的 CDN 分发
+
+### 用户体验
+
+**1. 交互设计**
+- 实时编辑和自动保存
+- 文件拖拽上传支持
+- 图片预览和文件下载
+
+**2. 界面优化**
+- 响应式布局适配
+- 暗色主题支持
+- 加载状态提示
+
+**3. 错误处理**
+- 文件上传失败重试
+- 数据保存错误提示
+- 网络异常处理
+
+这个组件通过结合 Cloudflare KV 和 R2 服务，实现了一个企业级的可编辑表格系统，特别适合需要文件管理的场景。
+
+:::
 
 
 ## 2025-01-03

@@ -677,6 +677,36 @@ const previewFile = (file) => {
     a.click()
   }
 }
+
+// 删除文件
+const deleteFile = async (file) => {
+  try {
+    // 使用 URL 构造器确保正确的路径
+    const url = new URL('/api/table-data/delete-file', API_BASE).toString()
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        pageId: props.pageId,
+        tableId: props.tableId,
+        fileName: file.key
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || '删除失败')
+    }
+
+    // 刷新数据
+    await loadData()
+  } catch (error) {
+    console.error('删除失败:', error)
+    alert('删除失败: ' + error.message)
+  }
+}
 </script>
 
 <style scoped>

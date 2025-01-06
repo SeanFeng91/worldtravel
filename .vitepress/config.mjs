@@ -59,7 +59,7 @@ export default withMermaid(defineConfig({
           collapsed: false,
           items:[
             {text:'中亚三国',
-              collapsed: true,
+              collapsed: false,
               items:[
                 {text:'13天行程',link:'/trip-plan/midasia-three'},
                 {text:'参考资料',link:'/trip-plan/reference'},

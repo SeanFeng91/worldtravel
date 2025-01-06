@@ -33,6 +33,11 @@ export async function handleTableData(request, env) {
     return handleFileAccess(request, env)
   }
 
+  // 处理文件删除
+  if (endpoint === 'delete-file') {
+    return handleFileDelete(request, env)
+  }
+
   // 处理表格数据
   return handleTableContent(request, env)
 }
@@ -479,4 +484,62 @@ async function handleFileAccess(request, env) {
       }
     })
   }
+}
+
+// 处理文件删除
+async function handleFileDelete(request, env) {
+  try {
+    const { pageId, tableId, fileName } = await request.json()
+
+    if (!pageId || !tableId || !fileName) {
+      throw new Error('缺少必要参数')
+    }
+
+    // 从 R2 删除文件
+    await env.TRAVEL_IMAGES.delete(fileName)
+
+    // 更新表格数据
+    const key = `${pageId}:${tableId}`
+    let tableData = await env.TRAVEL_DATA.get(key, { type: 'json' }) || { rows: [], attachments: [] }
+    
+    // 从附件列表中移除
+    tableData.attachments = (tableData.attachments || []).filter(
+      attachment => attachment.key !== fileName
+    )
+
+    await env.TRAVEL_DATA.put(key, JSON.stringify(tableData))
+
+    return new Response(JSON.stringify({
+      success: true
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
+    })
+  } catch (error) {
+    console.error('删除失败:', error)
+    return new Response(JSON.stringify({ 
+      error: error.message || '删除失败'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
+    })
+  }
+}
+
+// 在路由处理中添加删除文件的路由
+async function handleRequest(request, env) {
+  const url = new URL(request.url)
+  const path = url.pathname
+
+  // 处理文件删除
+  if (path.endsWith('/delete-file')) {
+    return handleFileDelete(request, env)
+  }
+
+  // ... 其他路由处理保持不变 ...
 } 
