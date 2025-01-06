@@ -200,7 +200,7 @@ const props = defineProps({
   }
 })
 
-const API_BASE = import.meta.env.VITE_WORKER_URL
+const API_BASE = import.meta.env.VITE_WORKER_URL.replace(/\/+$/, '')
 const tableData = ref([])
 const attachments = ref([])
 const selectedFile = ref(null)
@@ -380,8 +380,8 @@ const uploadFile = async (file) => {
   formData.append('pageId', props.pageId)
   formData.append('tableId', props.tableId)
 
-  // 使用新的文件上传接口
-  const url = `${API_BASE}/api/table-data/upload-file`.replace(/\/+/g, '/')
+  // 使用 URL 构造器确保正确的路径
+  const url = new URL('/api/table-data/upload-file', API_BASE).toString()
   const response = await fetch(url, {
     method: 'POST',
     body: formData
@@ -403,7 +403,7 @@ const uploadFile = async (file) => {
 // 删除图片
 const deleteImage = async (image) => {
   try {
-    const url = `${API_BASE}/api/table-data/delete-image`.replace(/\/+/g, '/')
+    const url = new URL('/api/table-data/delete-image', API_BASE).toString()
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -451,7 +451,7 @@ const saveData = async () => {
     formData.append('tableId', props.tableId)
     formData.append('data', JSON.stringify(validData))
 
-    const url = `${API_BASE}/api/table-data`.replace(/\/+/g, '/')
+    const url = new URL('/api/table-data', API_BASE).toString()
     const response = await fetch(url, {
       method: 'POST',
       body: formData
@@ -473,7 +473,8 @@ const saveData = async () => {
 // 加载数据
 const loadData = async () => {
   try {
-    const url = `${API_BASE}/api/table-data`.replace(/\/+/g, '/')
+    // 确保 URL 正确拼接
+    const url = new URL('/api/table-data', API_BASE).toString()
     const response = await fetch(
       `${url}?pageId=${props.pageId}&tableId=${props.tableId}`,
       {
@@ -633,8 +634,8 @@ const handleCellImageChange = async (event, rowIndex, header) => {
     formData.append('tableId', props.tableId)
     formData.append('cellId', `${rowIndex}-${header}`)
 
-    // 使用单元格图片上传接口
-    const url = `${API_BASE}/api/table-data/upload-cell-image`.replace(/\/+/g, '/')
+    // 使用 URL 构造器确保正确的路径
+    const url = new URL('/api/table-data/upload-cell-image', API_BASE).toString()
     const response = await fetch(url, {
       method: 'POST',
       body: formData
