@@ -93,6 +93,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 图片上传区域 -->
+    <div v-if="isEditable" class="image-upload">
+      <input 
+        type="file"
+        ref="fileInput"
+        @change="handleFileChange"
+        accept="image/*"
+        multiple
+        class="file-input"
+      >
+      <button @click="triggerFileInput" class="upload-btn">
+        <i class="fas fa-cloud-upload-alt"></i> 上传图片
+      </button>
+    </div>
+
+    <!-- 图片预览区域 -->
+    <div class="image-preview">
+      <div v-for="image in attachments" :key="image.key" class="image-item">
+        <img :src="image.url" :alt="image.name">
+        <div class="image-actions">
+          <a :href="image.url" target="_blank" class="preview-btn">查看</a>
+          <button v-if="isEditable" @click="deleteImage(image)" class="delete-btn">删除</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -113,6 +139,7 @@ const API_BASE = import.meta.env.VITE_WORKER_URL
 const tableData = ref([])
 const attachments = ref([])
 const selectedFile = ref(null)
+const fileInput = ref(null)
 
 // 定义列类型
 const columnTypes = computed(() => {
@@ -219,47 +246,100 @@ const isImage = (fileType) => {
 }
 
 // 处理文件选择
-const handleFileChange = (event) => {
-  selectedFile.value = event.target.files[0]
+const handleFileChange = async (event) => {
+  const files = event.target.files
+  if (!files.length) return
+
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) {
+      alert('只能上传图片文件')
+      continue
+    }
+
+    try {
+      await uploadFile(file)
+    } catch (error) {
+      console.error('上传失败:', error)
+      alert(`上传失败: ${file.name}`)
+    }
+  }
+  
+  // 清空文件选择，允许重复选择同一文件
+  event.target.value = ''
 }
 
 // 上传文件
-const uploadFile = async () => {
-  if (!selectedFile.value) return
-
+const uploadFile = async (file) => {
   const formData = new FormData()
+  formData.append('file', file)
   formData.append('pageId', props.pageId)
   formData.append('tableId', props.tableId)
-  formData.append('file', selectedFile.value)
+
+  const response = await fetch(`${API_BASE}/api/table-data/upload`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    throw new Error('上传失败')
+  }
+
+  // 刷新数据
+  await loadData()
+}
+
+// 删除图片
+const deleteImage = async (image) => {
+  if (!confirm('确定要删除这张图片吗？')) return
 
   try {
-    const response = await fetch(`${API_BASE}/api/travel-data`, {
+    const response = await fetch(`${API_BASE}/api/table-data/delete-image`, {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        pageId: props.pageId,
+        tableId: props.tableId,
+        fileName: image.key
+      })
     })
 
     if (!response.ok) {
-      throw new Error('上传失败')
+      throw new Error('删除失败')
     }
 
-    // 刷新附件列表
+    // 刷新数据
     await loadData()
-    selectedFile.value = null
   } catch (error) {
-    console.error('上传失败:', error)
-    alert('上传失败: ' + error.message)
+    console.error('删除失败:', error)
+    alert('删除失败: ' + error.message)
   }
 }
 
 // 保存数据
 const saveData = async () => {
   try {
+    // 确保数据是有效的
+    const validData = tableData.value.map(row => {
+      const newRow = {}
+      props.headers.forEach(header => {
+        // 确保数字类型的值是有效的数字
+        if (columnTypes.value[header] === 'number') {
+          newRow[header] = row[header] ? parseFloat(row[header]) || 0 : 0
+        } else {
+          newRow[header] = row[header] || ''
+        }
+      })
+      return newRow
+    })
+
     const formData = new FormData()
     formData.append('pageId', props.pageId)
     formData.append('tableId', props.tableId)
-    formData.append('data', JSON.stringify(tableData.value))
+    formData.append('data', JSON.stringify(validData))
 
-    const url = `${API_BASE}/api/travel-data`.replace(/\/+/g, '/')
+    const url = `${API_BASE}/api/table-data`
     const response = await fetch(url, {
       method: 'POST',
       body: formData
@@ -270,7 +350,6 @@ const saveData = async () => {
       throw new Error(errorData.error || '保存失败')
     }
 
-    // 保存成功后切换回只读模式
     isEditable.value = false
     alert('保存成功')
   } catch (error) {
@@ -282,7 +361,7 @@ const saveData = async () => {
 // 加载数据
 const loadData = async () => {
   try {
-    const url = `${API_BASE}/api/travel-data`.replace(/\/+/g, '/')
+    const url = `${API_BASE}/api/table-data`.replace(/\/+/g, '/')
     const response = await fetch(
       `${url}?pageId=${props.pageId}&tableId=${props.tableId}`,
       {
@@ -377,6 +456,11 @@ const formatDisplayValue = (value, header) => {
     return formatNumber(value, header)
   }
   return value
+}
+
+// 触发文件选择
+const triggerFileInput = () => {
+  fileInput.value.click()
 }
 </script>
 
@@ -617,5 +701,82 @@ td {
     border-color: #444;
     color: white;
   }
+}
+
+.image-upload {
+  margin: 16px 0;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-btn {
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.image-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.image-item {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.image-item img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.image-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.image-item:hover .image-actions {
+  opacity: 1;
+}
+
+.preview-btn, .delete-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.preview-btn {
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
 }
 </style>

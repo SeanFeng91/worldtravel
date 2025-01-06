@@ -1,6 +1,7 @@
 import { corsHeaders, handleOptions } from './utils/cors.js';
 import { youtubeTools, handleYouTubeTool } from './tools/youtube-tool.js';
 import { handleMapTool } from './tools/map-tool.js';
+import { handleTableData } from './tools/table-tool.js';
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1alpha';  // 使用固定的 endpoint
 
 import { handleKVData } from './tools/kv-tool.js';
@@ -13,6 +14,14 @@ export default {
       return handleKVData(request, env)
     }
     
+    if (url.pathname.startsWith('/api/table-data')) {
+      return handleTableData(request, env)
+    }
+    
+    if (url.pathname === '/api/map-data') {
+      return handleMapTool(request, env)
+    }
+
     if (request.method === "OPTIONS") {
       return handleOptions();
     }
