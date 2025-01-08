@@ -65,6 +65,13 @@ export default withMermaid(defineConfig({
                 {text:'参考资料',link:'/trip-plan/reference'},
                 {text:'旅行手册模板',link:'/trip-plan/TravelBlogTemplate'},
               ]
+            },
+            {
+              text:'国内',
+              collapsed: false,
+              items:[
+                {text:'新疆阿勒泰之旅',link:'/trip-plan/Aletai_N_20250108'},
+              ]
             }
           ]
         }
