@@ -71,6 +71,7 @@ export default withMermaid(defineConfig({
               collapsed: false,
               items:[
                 {text:'新疆阿勒泰之旅',link:'/trip-plan/Aletai_N_20250108'},
+                {text:'河南开封郑州行',link:'/trip-plan/Henan_N_20250109.md'}
               ]
             }
           ]
