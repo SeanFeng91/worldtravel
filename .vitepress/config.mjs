@@ -83,6 +83,7 @@ export default withMermaid(defineConfig({
           collapsed: false,
           items:[
             {text:'2025元旦mini现代五项',link:'/trip-history/N01_yuandan'},
+            {text:'2025阿勒泰看雪之旅',link:'/trip-history/N02_Aletai'},
           ]
         },
         {
